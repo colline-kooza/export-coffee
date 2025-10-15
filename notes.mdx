@@ -1,0 +1,97 @@
+I'll analyze the demo transcript and create a comprehensive summary along with all necessary Prisma models for this loan management application.
+App Summary: LendBox - AI-Powered Loan Management System
+LendBox is a comprehensive loan management software designed for loan providers and microfinance institutions. Here's what it offers:
+Core Features:
+
+Dashboard & Analytics: Real-time insights into business performance, tracking principal dispersed, loan statuses, expected/realized profits, and key metrics
+Borrower Management: Complete borrower profiles with KYC details, document uploads, and AI-powered fraud detection on uploaded documents
+Loan Management: Full loan lifecycle management including multiple loan types, flexible interest methods, repayment schedules, fees, and collateral tracking
+Repayment Tracking: Automated repayment recording with automatic balance updates and status changes
+Accounting System: Integrated financial management with general ledger, cash flow statements, P&L, trial balance, and balance sheets
+Loan Products: Pre-configured loan templates for quick loan creation with consistent terms
+Borrower Portal: Self-service website where borrowers can apply for loans, track repayments, and manage their accounts
+Multi-Branch Support: Manage multiple locations with branch-specific data segregation
+Staff Management: Role-based access control with customizable permissions
+Automated Notifications: SMS and email reminders for payments and business reports
+AI Features: Fraud detection on documents/images and credit risk scoring
+
+Now, let me create comprehensive Prisma models for this application:LendBox Prisma SchemaCode // This is your Prisma schema file for LendBox Loan Management System
+
+```
+generator client {
+provider = "prisma-client-js"
+}
+
+datasource db {
+provider = "postgresql"
+url = env("DATABASE_URL")
+}
+
+```
+
+// ============================================Purpose of Each Model:
+Institution & Branch Management
+
+Institution: Core entity representing the lending organization with settings and configurations
+Branch: Supports multi-location operations with branch-specific data segregation
+
+User & Staff Management
+
+User: Authentication and base user information for both staff and borrowers
+Staff: Internal employees with role-based access to the system
+Role: Job positions/titles with associated permissions (admin, manager, loan officer, auditor)
+Permission: Granular actions that can be performed (create, read, update, delete, approve)
+RolePermission: Junction table linking roles to specific permissions
+
+Borrower Management
+
+Borrower: Customer profiles with KYC details, employment info, and AI credit scoring
+BorrowerDocument: Uploaded ID cards, income statements with AI fraud detection flags
+
+Loan Products
+
+LoanProduct: Pre-configured loan templates (personal, business, mortgage, payday loans)
+LoanProductFee: Associated fees (processing, insurance, legal)
+LoanProductPenalty: Late payment penalty configuration per product
+
+Loan Management
+
+Loan: Core loan entity tracking principal, interest, status, and repayment details
+LoanFee: Specific fees applied to individual loans
+LoanPenalty: Late payment penalties accrued on loans
+LoanCollateral: Assets pledged as security for loans
+CollateralDocument: Images/documents of collateral with AI fraud detection
+
+Repayment Management
+
+RepaymentSchedule: Expected payment installments with dates and amounts
+Repayment: Actual payments received from borrowers
+
+Borrower Portal
+
+LoanRequest: Applications submitted through the borrower website
+BorrowerWebsite: Configuration for self-service loan application portal
+SignupFormField: Customizable registration form fields
+RequiredDocument: Documents borrowers must upload when applying
+
+Accounting System
+
+Account: Chart of accounts for double-entry bookkeeping (assets, liabilities, equity, revenue, expenses)
+JournalEntry: Financial transaction headers
+JournalEntryLine: Individual debit/credit lines for journal entries
+
+Notifications & Settings
+
+NotificationTemplate: SMS/Email templates for automated communications
+NotificationLog: Record of all notifications sent
+InstitutionSettings: System-wide configuration for notifications, currency, timezone
+
+Audit & Security
+
+AuditLog: Complete audit trail of all system actions for compliance
+
+This schema provides a complete foundation for building a production-ready loan management system with all the features demonstrated in the LendBox app!
+
+```
+
+```

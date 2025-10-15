@@ -1,0 +1,1409 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ======================
+// USER MANAGEMENT & AUTHENTICATION
+// ======================
+
+enum UserRole {
+  SYSTEM_ADMIN
+  PROCUREMENT_QUALITY_MANAGER
+  WAREHOUSE_INVENTORY_OFFICER
+  SALES_LOGISTICS_MANAGER
+  FINANCE_OFFICER
+  OPERATIONS_MANAGER
+}
+
+enum PermissionAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  EXPORT
+}
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  firstName   String
+  lastName    String
+  phoneNumber String?
+  role        UserRole
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  permissions                Permission[]
+  auditLogs                  AuditLog[]
+  truckEntries               TruckEntry[]
+  weighbridgeReadings        WeighbridgeReading[]
+  buyingWeightNotes          BuyingWeightNote[]      @relation("CreatedBy")
+  stockReceipts              StockReceipt[]          @relation("ReceivedBy")
+  qualityInspections         QualityInspection[]     @relation("Inspector")
+  dryingOrders               DryingOrder[]           @relation("CreatedBy")
+  dryerMonitoringReadings    DryerMCMonitoring[]     @relation("Operator")
+  inventoryMovements         InventoryMovement[]
+  physicalStockCounts        PhysicalStockCount[]    @relation("CountedBy")
+  exportOrders               ExportOrder[]           @relation("CreatedBy")
+  containerInspections       ContainerInspection[]   @relation("Inspector")
+  loadingTallies             LoadingTally[]          @relation("Supervisor")
+  transportJobs              TransportJob[]          @relation("CreatedBy")
+  exportDocuments            ExportDocument[]        @relation("IssuedBy")
+  traderPayments             TraderPayment[]         @relation("ProcessedBy")
+  exportPayments             ExportPayment[]         @relation("ProcessedBy")
+  annualProcurementPlans     AnnualProcurementPlan[] @relation("CreatedBy")
+  approvedBuyingWeightNotes  BuyingWeightNote[]      @relation("ApprovedBy")
+  verifiedStockReceipts      StockReceipt[]          @relation("VerifiedBy")
+  approvedQualityInspections QualityInspection[]     @relation("ApprovedBy")
+  verifiedLoadingTallies     LoadingTally[]          @relation("VerifiedBy")
+  acknowledgedAlerts         SystemAlert[]           @relation("AcknowledgedBy")
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+model Permission {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module    String // e.g., "TRADER_MANAGEMENT", "QUALITY_CONTROL"
+  action    PermissionAction
+  createdAt DateTime         @default(now())
+
+  @@unique([userId, module, action])
+  @@index([userId])
+  @@map("permissions")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String // e.g., "CREATE_BWN", "APPROVE_QC"
+  module     String // e.g., "PROCUREMENT", "QUALITY_CONTROL"
+  recordId   String // ID of affected record
+  recordType String // e.g., "BuyingWeightNote", "QualityInspection"
+  oldData    Json? // Snapshot before change
+  newData    Json? // Snapshot after change
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  @@index([userId])
+  @@index([recordType, recordId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+// ======================
+// TRADER MANAGEMENT
+// ======================
+
+enum TraderStatus {
+  ACTIVE
+  SUSPENDED
+  BLACKLISTED
+  UNDER_REVIEW
+}
+
+model Trader {
+  id                    String       @id @default(cuid())
+  traderCode            String       @unique // e.g., "TRD-2025-001"
+  name                  String
+  contactPerson         String?
+  phoneNumber           String
+  alternatePhone        String?
+  email                 String?
+  physicalAddress       String?
+  district              String?
+  registrationNumber    String? // Business registration
+  tinNumber             String? // Tax Identification Number
+  status                TraderStatus @default(ACTIVE)
+  trustScore            Int          @default(50) // 0-100
+  totalDeliveries       Int          @default(0)
+  totalVolumeKg         Int          @default(0)
+  qualityAcceptanceRate Int          @default(0) // Percentage 0-100
+  reliabilityScore      Int          @default(50) // 0-100
+  preferredPaymentDays  Int          @default(1) // Usually 1 day
+  notes                 String?
+  isActive              Boolean      @default(true)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  // Relationships
+  performance       TraderPerformance?
+  paymentTerms      TraderPaymentTerms?
+  disputes          TraderDispute[]
+  buyingWeightNotes BuyingWeightNote[]
+  stockReceipts     StockReceipt[]
+  inventory         Inventory[]
+  payments          TraderPayment[]
+
+  @@index([traderCode])
+  @@index([status])
+  @@index([isActive])
+  @@map("traders")
+}
+
+model TraderPerformance {
+  id                      String    @id @default(cuid())
+  traderId                String    @unique
+  trader                  Trader    @relation(fields: [traderId], references: [id], onDelete: Cascade)
+  totalDeliveries         Int       @default(0)
+  totalVolumeKg           Int       @default(0)
+  acceptedDeliveries      Int       @default(0)
+  rejectedDeliveries      Int       @default(0)
+  borderlineDeliveries    Int       @default(0)
+  qualityConsistencyScore Int       @default(50) // 0-100
+  averageDefectCount      Int       @default(0)
+  averageMoistureContent  Int       @default(0) // Stored as integer (e.g., 125 = 12.5%)
+  onTimeDeliveryRate      Int       @default(100) // Percentage
+  lastDeliveryDate        DateTime?
+  updatedAt               DateTime  @updatedAt
+
+  @@index([traderId])
+  @@map("trader_performance")
+}
+
+model TraderPaymentTerms {
+  id                String   @id @default(cuid())
+  traderId          String   @unique
+  trader            Trader   @relation(fields: [traderId], references: [id], onDelete: Cascade)
+  paymentDays       Int      @default(1) // Usually 1 day (24 hours)
+  preferredMethod   String   @default("BANK_TRANSFER") // BANK_TRANSFER, MOBILE_MONEY
+  bankName          String?
+  accountNumber     String?
+  accountName       String?
+  mobileMoneyNumber String?
+  mobileMoneyName   String?
+  requiresAdvance   Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([traderId])
+  @@map("trader_payment_terms")
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_INVESTIGATION
+  RESOLVED
+  CLOSED
+}
+
+model TraderDispute {
+  id          String        @id @default(cuid())
+  traderId    String
+  trader      Trader        @relation(fields: [traderId], references: [id], onDelete: Cascade)
+  disputeType String // e.g., "QUALITY_ISSUE", "WEIGHT_DISPUTE", "PAYMENT_DELAY"
+  description String
+  bwnNumber   String? // Related Buying Weight Note
+  amount      BigInt? // Disputed amount in UGX
+  status      DisputeStatus @default(OPEN)
+  resolution  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([traderId])
+  @@index([status])
+  @@map("trader_disputes")
+}
+
+// ======================
+// ANNUAL PROCUREMENT PLANNING
+// ======================
+
+enum ProcurementPlanStatus {
+  DRAFT
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  REVISED
+}
+
+model AnnualProcurementPlan {
+  id               String                @id @default(cuid())
+  year             Int // e.g., 2025
+  planCode         String                @unique // e.g., "APP-2025"
+  arabicaTargetKg  Int // Target volume for Arabica
+  robustaTargetKg  Int // Target volume for Robusta
+  totalBudgetUGX   BigInt // Total budget in UGX
+  arabicaBudgetUGX BigInt
+  robustaBudgetUGX BigInt
+  status           ProcurementPlanStatus @default(DRAFT)
+  notes            String?
+  createdById      String
+  createdBy        User                  @relation("CreatedBy", fields: [createdById], references: [id])
+  approvedAt       DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  // Relationships
+  quarterlyTargets QuarterlyTarget[]
+  priceFloors      PriceFloor[]
+
+  @@unique([year])
+  @@index([year])
+  @@index([status])
+  @@map("annual_procurement_plans")
+}
+
+model QuarterlyTarget {
+  id                 String                @id @default(cuid())
+  planId             String
+  plan               AnnualProcurementPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  quarter            Int // 1, 2, 3, 4
+  volumeTargetKg     Int
+  budgetAllocatedUGX BigInt
+  actualVolumeKg     Int                   @default(0)
+  actualSpentUGX     BigInt                @default(0)
+  varianceKg         Int                   @default(0) // Calculated field
+  varianceBudget     BigInt                @default(0) // Calculated field
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  @@unique([planId, quarter])
+  @@index([planId])
+  @@map("quarterly_targets")
+}
+
+enum CoffeeType {
+  ARABICA
+  ROBUSTA
+}
+
+model PriceFloor {
+  id              String                @id @default(cuid())
+  planId          String
+  plan            AnnualProcurementPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  coffeeType      CoffeeType
+  effectiveDate   DateTime
+  floorPriceUGX   Int // Price per kg
+  ceilingPriceUGX Int // Price per kg
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([planId])
+  @@index([coffeeType])
+  @@index([effectiveDate])
+  @@map("price_floors")
+}
+
+model MarketTrend {
+  id         String     @id @default(cuid())
+  date       DateTime
+  coffeeType CoffeeType
+  priceUGX   Int // Price per kg
+  source     String // e.g., "UCDA", "ICE_FUTURES", "LOCAL_MARKET"
+  notes      String?
+  createdAt  DateTime   @default(now())
+
+  @@index([date])
+  @@index([coffeeType])
+  @@map("market_trends")
+}
+
+// ======================
+// TRADER DELIVERY & WEIGHING
+// ======================
+
+model TruckEntry {
+  id                String   @id @default(cuid())
+  truckNumber       String
+  driverName        String
+  driverPhone       String?
+  traderId          String
+  arrivalTime       DateTime @default(now())
+  securityOfficerId String
+  securityOfficer   User     @relation(fields: [securityOfficerId], references: [id])
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  // Relationships
+  weighbridgeReading WeighbridgeReading?
+
+  @@index([truckNumber])
+  @@index([arrivalTime])
+  @@map("truck_entries")
+}
+
+model WeighbridgeReading {
+  id            String     @id @default(cuid())
+  entryId       String     @unique
+  entry         TruckEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  grossWeightKg Int // Truck + Coffee
+  tareWeightKg  Int // Empty truck
+  netWeightKg   Int // Calculated: gross - tare
+  operatorId    String
+  operator      User       @relation(fields: [operatorId], references: [id])
+  timestamp     DateTime   @default(now())
+  notes         String?
+
+  // Relationships
+  buyingWeightNote BuyingWeightNote?
+
+  @@index([entryId])
+  @@map("weighbridge_readings")
+}
+
+enum BWNStatus {
+  PENDING_WEIGHING
+  WEIGHED
+  MOISTURE_TESTED
+  PRICE_CALCULATED
+  AWAITING_QC
+  PAYMENT_APPROVED
+  COMPLETED
+  REJECTED
+}
+
+model BuyingWeightNote {
+  id                   String             @id @default(cuid())
+  bwnNumber            String             @unique // e.g., "BWN-2025-10-1847"
+  traderId             String
+  trader               Trader             @relation(fields: [traderId], references: [id])
+  weighbridgeReadingId String             @unique
+  weighbridgeReading   WeighbridgeReading @relation(fields: [weighbridgeReadingId], references: [id])
+  deliveryDate         DateTime           @default(now())
+  truckNumber          String
+  coffeeType           CoffeeType
+  grossWeightKg        Int
+  tareWeightKg         Int
+  netWeightKg          Int
+  moistureContent      Int // Stored as integer (e.g., 125 = 12.5%)
+  moistureDeductionKg  Int                @default(0)
+  finalNetWeightKg     Int // After moisture deduction
+  pricePerKgUGX        Int
+  totalAmountUGX       BigInt
+  outturn              String? // Quality grade preliminary
+  qualityAnalysisNo    String?
+  buyingCentre         String?
+  traderSignature      String? // File path or base64
+  status               BWNStatus          @default(PENDING_WEIGHING)
+  paymentStatus        String             @default("PENDING") // PENDING, APPROVED, PAID
+  createdById          String
+  createdBy            User               @relation("CreatedBy", fields: [createdById], references: [id])
+  approvedById         String?
+  approvedBy           User?              @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt           DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  // Relationships
+  moistureReadings MoistureReading[]
+  stockReceipts    StockReceipt[]
+  payments         TraderPayment[]
+
+  @@index([bwnNumber])
+  @@index([traderId])
+  @@index([deliveryDate])
+  @@index([status])
+  @@index([paymentStatus])
+  @@map("buying_weight_notes")
+}
+
+model MoistureReading {
+  id                  String           @id @default(cuid())
+  bwnId               String
+  bwn                 BuyingWeightNote @relation(fields: [bwnId], references: [id], onDelete: Cascade)
+  moistureContent     Int // Stored as integer (e.g., 125 = 12.5%)
+  adjustmentAmountUGX BigInt           @default(0)
+  readingTime         DateTime         @default(now())
+  notes               String?
+
+  @@index([bwnId])
+  @@map("moisture_readings")
+}
+
+// ======================
+// STOCK RECEPTION
+// ======================
+
+enum StockReceiptStatus {
+  UNVERIFIED_FAQ
+  IN_HOLDING
+  QC_PENDING
+  QC_IN_PROGRESS
+  VERIFIED
+  REJECTED
+}
+
+model StockReceipt {
+  id              String             @id @default(cuid())
+  receiptNumber   String             @unique // e.g., "SR-2025-10-001"
+  bwnId           String
+  bwn             BuyingWeightNote   @relation(fields: [bwnId], references: [id])
+  lotNumber       String             @unique // e.g., "ROB-TRD-Ahmed-131025-03T"
+  traderId        String
+  trader          Trader             @relation(fields: [traderId], references: [id])
+  coffeeType      CoffeeType
+  quantityKg      Int
+  moistureContent Int // Stored as integer
+  storageLocation String // e.g., "Bay A, Stack 12"
+  status          StockReceiptStatus @default(UNVERIFIED_FAQ)
+  receivedById    String
+  receivedBy      User               @relation("ReceivedBy", fields: [receivedById], references: [id])
+  verifiedById    String?
+  verifiedBy      User?              @relation("VerifiedBy", fields: [verifiedById], references: [id])
+  receivedDate    DateTime           @default(now())
+  verifiedAt      DateTime?
+  notes           String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Relationships
+  qualityInspection QualityInspection?
+  inventory         Inventory?
+  dryingOrders      DryingOrder[]
+
+  @@index([receiptNumber])
+  @@index([lotNumber])
+  @@index([traderId])
+  @@index([status])
+  @@map("stock_receipts")
+}
+
+model StorageLocation {
+  id          String   @id @default(cuid())
+  bay         String
+  stack       String
+  capacityKg  Int
+  occupiedKg  Int      @default(0)
+  isAvailable Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([bay, stack])
+  @@index([isAvailable])
+  @@map("storage_locations")
+}
+
+model LotTraceability {
+  id            String     @id @default(cuid())
+  lotNumber     String     @unique
+  traderId      String
+  coffeeType    CoffeeType
+  deliveryDate  DateTime
+  bwnNumber     String
+  receiptNumber String
+  createdAt     DateTime   @default(now())
+
+  @@index([lotNumber])
+  @@index([traderId])
+  @@map("lot_traceability")
+}
+
+// ======================
+// FAQ QUALITY VERIFICATION
+// ======================
+
+enum QCResult {
+  PASSED
+  BORDERLINE
+  FAILED
+  RE_TEST_REQUIRED
+}
+
+model QualityInspection {
+  id                        String       @id @default(cuid())
+  inspectionNumber          String       @unique // e.g., "QC-2025-10-001"
+  lotNumber                 String       @unique
+  receiptId                 String       @unique
+  receipt                   StockReceipt @relation(fields: [receiptId], references: [id])
+  inspectorId               String
+  inspector                 User         @relation("Inspector", fields: [inspectorId], references: [id])
+  inspectionDate            DateTime     @default(now())
+  sampleWeightGrams         Int // e.g., 1500 (1.5kg for 3-ton delivery)
+  defectCount               Int // Max 86 for FAQ
+  screenSizePassPercentage  Int // Should be >= 90%
+  moistureContent           Int // Stored as integer
+  foreignMatterPercentage   Int // Should be < 5 (0.5%)
+  colorGrade                String // e.g., "BLUISH_GREEN", "GREENISH_YELLOW"
+  odorNotes                 String? // e.g., "NO_OFF_ODORS", "SLIGHT_FERMENTATION"
+  overallResult             QCResult
+  priceAdjustmentPercentage Int          @default(0) // For borderline (5-10%)
+  priceAdjustmentUGX        BigInt       @default(0)
+  notes                     String?
+  approvedById              String?
+  approvedBy                User?        @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt                DateTime?
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+
+  // Relationships
+  defectLogs         DefectLog[]
+  qualityCertificate QualityCertificate?
+
+  @@index([inspectionNumber])
+  @@index([lotNumber])
+  @@index([receiptId])
+  @@index([overallResult])
+  @@map("quality_inspections")
+}
+
+model DefectLog {
+  id           String            @id @default(cuid())
+  inspectionId String
+  inspection   QualityInspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  defectType   String // e.g., "BLACK_BEANS", "SOURS", "BROKEN", "INSECT_DAMAGE"
+  count        Int
+  notes        String?
+
+  @@index([inspectionId])
+  @@map("defect_logs")
+}
+
+model QualityCertificate {
+  id                String            @id @default(cuid())
+  certificateNumber String            @unique // e.g., "QCERT-2025-10-001"
+  inspectionId      String            @unique
+  inspection        QualityInspection @relation(fields: [inspectionId], references: [id])
+  issueDate         DateTime          @default(now())
+  expiryDate        DateTime?
+  filePath          String? // PDF file path
+  createdAt         DateTime          @default(now())
+
+  @@index([certificateNumber])
+  @@map("quality_certificates")
+}
+
+// ======================
+// MOISTURE MANAGEMENT & DRYING
+// ======================
+
+enum DryingStatus {
+  PENDING_DRYING
+  IN_PROGRESS
+  COOLING
+  COMPLETED
+  QC_RECHECK_REQUIRED
+}
+
+model DryingOrder {
+  id          String         @id @default(cuid())
+  orderNumber String         @unique // e.g., "DRY-2025-10-001"
+  lotNumber   String
+  receiptId   String
+  receipt     StockReceipt   @relation(fields: [receiptId], references: [id])
+  quantityKg  Int
+  initialMC   Int // Stored as integer (e.g., 135 = 13.5%)
+  targetMC    Int // Target 115-120 (11.5-12%)
+  currentMC   Int?
+  dryerId     String
+  dryer       DryerEquipment @relation(fields: [dryerId], references: [id])
+  startTime   DateTime?
+  endTime     DateTime?
+  status      DryingStatus   @default(PENDING_DRYING)
+  createdById String
+  createdBy   User           @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relationships
+  monitoringReadings DryerMCMonitoring[]
+  dryingCost         DryingCost?
+
+  @@index([orderNumber])
+  @@index([lotNumber])
+  @@index([status])
+  @@map("drying_orders")
+}
+
+model DryerMCMonitoring {
+  id                 String      @id @default(cuid())
+  orderId            String
+  order              DryingOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  readingTime        DateTime    @default(now())
+  currentMC          Int // Stored as integer
+  temperatureCelsius Int // e.g., 40-45
+  operatorId         String
+  operator           User        @relation("Operator", fields: [operatorId], references: [id])
+  notes              String?
+
+  @@index([orderId])
+  @@index([readingTime])
+  @@map("dryer_mc_monitoring")
+}
+
+enum DryerStatus {
+  OPERATIONAL
+  MAINTENANCE
+  BREAKDOWN
+  INACTIVE
+}
+
+model DryerEquipment {
+  id              String      @id @default(cuid())
+  dryerCode       String      @unique // e.g., "DRY-A1"
+  capacityKg      Int
+  status          DryerStatus @default(OPERATIONAL)
+  lastMaintenance DateTime?
+  nextMaintenance DateTime?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relationships
+  dryingOrders DryingOrder[]
+
+  @@index([dryerCode])
+  @@index([status])
+  @@map("dryer_equipment")
+}
+
+model DryingCost {
+  id           String      @id @default(cuid())
+  orderId      String      @unique
+  order        DryingOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fuelCostUGX  BigInt
+  laborCostUGX BigInt
+  totalCostUGX BigInt
+  costPerKgUGX Int // Typically 3-5 UGX/kg
+  createdAt    DateTime    @default(now())
+
+  @@index([orderId])
+  @@map("drying_costs")
+}
+
+// ======================
+// INVENTORY MANAGEMENT
+// ======================
+
+enum InventoryStatus {
+  UNVERIFIED_FAQ
+  VERIFIED_EXPORT_READY
+  ALLOCATED_TO_ORDER
+  IN_DRYING
+  IN_TRANSIT
+  EXPORTED
+  SOLD_LOCALLY
+  REJECTED
+}
+
+model Inventory {
+  id              String          @id @default(cuid())
+  lotNumber       String          @unique
+  receiptId       String          @unique
+  receipt         StockReceipt    @relation(fields: [receiptId], references: [id])
+  traderId        String
+  trader          Trader          @relation(fields: [traderId], references: [id])
+  coffeeType      CoffeeType
+  quantityKg      Int
+  moistureContent Int // Stored as integer
+  storageLocation String
+  status          InventoryStatus @default(UNVERIFIED_FAQ)
+  purchaseDate    DateTime
+  daysInStock     Int             @default(0) // Calculated field
+  isAgedStock     Boolean         @default(false) // > 90 days
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relationships
+  movements        InventoryMovement[]
+  orderAllocations OrderAllocation[]
+
+  @@index([lotNumber])
+  @@index([traderId])
+  @@index([coffeeType])
+  @@index([status])
+  @@index([isAgedStock])
+  @@map("inventory")
+}
+
+enum MovementType {
+  PURCHASE_RECEIPT
+  QUALITY_REJECTION
+  DRYING_TRANSFER
+  EXPORT_ALLOCATION
+  LOCAL_SALE
+  STOCK_ADJUSTMENT
+  RETURN_TO_TRADER
+}
+
+model InventoryMovement {
+  id             String       @id @default(cuid())
+  movementNumber String       @unique // e.g., "MOV-2025-10-001"
+  lotNumber      String
+  inventory      Inventory    @relation(fields: [lotNumber], references: [lotNumber])
+  movementType   MovementType
+  quantityKg     Int
+  fromLocation   String?
+  toLocation     String?
+  referenceDoc   String? // e.g., BWN number, Export Order ID
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  timestamp      DateTime     @default(now())
+  notes          String?
+
+  @@index([movementNumber])
+  @@index([lotNumber])
+  @@index([movementType])
+  @@index([timestamp])
+  @@map("inventory_movements")
+}
+
+model MonthlyStockReport {
+  id               String     @id @default(cuid())
+  month            Int // 1-12
+  year             Int
+  coffeeType       CoffeeType
+  openingBalanceKg Int
+  purchasesKg      Int
+  rejectionsKg     Int
+  processingLossKg Int
+  exportsKg        Int
+  localSalesKg     Int
+  closingBalanceKg Int
+  varianceKg       Int // Physical count - System balance
+  createdAt        DateTime   @default(now())
+
+  @@unique([year, month, coffeeType])
+  @@index([year, month])
+  @@map("monthly_stock_reports")
+}
+
+enum StockCountStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  VARIANCE_INVESTIGATION
+}
+
+model PhysicalStockCount {
+  id            String           @id @default(cuid())
+  countNumber   String           @unique // e.g., "COUNT-2025-10-001"
+  countDate     DateTime
+  lotNumber     String
+  systemQtyKg   Int
+  physicalQtyKg Int
+  varianceKg    Int // Calculated: physical - system
+  countedById   String
+  countedBy     User             @relation("CountedBy", fields: [countedById], references: [id])
+  status        StockCountStatus @default(SCHEDULED)
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([countNumber])
+  @@index([lotNumber])
+  @@index([countDate])
+  @@index([status])
+  @@map("physical_stock_counts")
+}
+
+// ======================
+// EXPORT ORDER MANAGEMENT
+// ======================
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  INVENTORY_ALLOCATED
+  PACKING_IN_PROGRESS
+  READY_FOR_LOADING
+  LOADED
+  IN_TRANSIT
+  DELIVERED
+  PAYMENT_RECEIVED
+  COMPLETED
+  CANCELLED
+}
+
+model ExportOrder {
+  id               String      @id @default(cuid())
+  orderNumber      String      @unique // e.g., "EXP-2025-10-045"
+  buyerName        String
+  buyerCountry     String
+  buyerContact     String?
+  buyerEmail       String?
+  contractNumber   String?
+  coffeeType       CoffeeType
+  quantityKg       Int
+  pricePerKgUSD    Int // Stored as cents (e.g., 235000 = $2350.00)
+  totalValueUSD    BigInt // Stored as cents
+  incoterms        String // e.g., "FOB_MOMBASA", "CIF_GENOA"
+  paymentTerms     String // e.g., "LETTER_OF_CREDIT", "ADVANCE_PAYMENT"
+  destinationPort  String
+  shipmentDeadline DateTime
+  bagType          String // e.g., "60KG_JUTE", "1TON_BULK"
+  status           OrderStatus @default(DRAFT)
+  createdById      String
+  createdBy        User        @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Relationships
+  allocations          OrderAllocation[]
+  containerBookings    ContainerBooking[]
+  containerInspections ContainerInspection[]
+  loadingTallies       LoadingTally[]
+  transportJobs        TransportJob[]
+  exportDocuments      ExportDocument[]
+  payments             ExportPayment[]
+
+  @@index([orderNumber])
+  @@index([buyerName])
+  @@index([status])
+  @@index([shipmentDeadline])
+  @@map("export_orders")
+}
+
+model OrderAllocation {
+  id             String      @id @default(cuid())
+  orderId        String
+  order          ExportOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lotNumber      String
+  inventory      Inventory   @relation(fields: [lotNumber], references: [lotNumber])
+  allocatedKg    Int
+  allocationDate DateTime    @default(now())
+  notes          String?
+
+  @@index([orderId])
+  @@index([lotNumber])
+  @@map("order_allocations")
+}
+
+// ======================
+// CONTAINER & LOADING MANAGEMENT
+// ======================
+
+enum ContainerStatus {
+  BOOKED
+  ARRIVED
+  INSPECTED_PASSED
+  INSPECTED_FAILED
+  LOADING_IN_PROGRESS
+  LOADED
+  SEALED
+  IN_TRANSIT
+  DELIVERED
+}
+
+model ContainerBooking {
+  id               String          @id @default(cuid())
+  orderId          String
+  order            ExportOrder     @relation(fields: [orderId], references: [id])
+  containerNumber  String // e.g., "TCLU1234567"
+  containerType    String // e.g., "20FT", "40FT"
+  shippingLine     String // e.g., "MAERSK", "MSC"
+  bookingReference String?
+  expectedArrival  DateTime?
+  actualArrival    DateTime?
+  status           ContainerStatus @default(BOOKED)
+  notes            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relationships
+  inspection   ContainerInspection?
+  loadingTally LoadingTally?
+
+  @@index([orderId])
+  @@index([containerNumber])
+  @@index([status])
+  @@map("container_bookings")
+}
+
+enum InspectionResult {
+  PASSED
+  FAILED
+  CONDITIONAL_PASS
+}
+
+model ContainerInspection {
+  id               String           @id @default(cuid())
+  bookingId        String           @unique
+  booking          ContainerBooking @relation(fields: [bookingId], references: [id])
+  orderId          String
+  order            ExportOrder      @relation(fields: [orderId], references: [id])
+  inspectionNumber String           @unique // e.g., "CI-2025-10-012"
+  inspectorId      String
+  inspector        User             @relation("Inspector", fields: [inspectorId], references: [id])
+  inspectionDate   DateTime         @default(now())
+  cleanlinessCheck Boolean
+  drynessCheck     Boolean
+  structuralCheck  Boolean
+  odorCheck        Boolean
+  doorSealsCheck   Boolean
+  floorCondition   String?
+  wallCondition    String?
+  roofCondition    String?
+  result           InspectionResult
+  rejectionReason  String?
+  photos           String? // JSON array of photo paths
+  notes            String?
+  createdAt        DateTime         @default(now())
+
+  @@index([inspectionNumber])
+  @@index([bookingId])
+  @@index([orderId])
+  @@index([result])
+  @@map("container_inspections")
+}
+
+enum LoadingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  VERIFIED
+}
+
+model LoadingTally {
+  id                 String           @id @default(cuid())
+  tallyNumber        String           @unique // e.g., "LT-2025-10-023"
+  orderId            String
+  order              ExportOrder      @relation(fields: [orderId], references: [id])
+  bookingId          String           @unique
+  booking            ContainerBooking @relation(fields: [bookingId], references: [id])
+  containerNumber    String
+  loadingDate        DateTime         @default(now())
+  startTime          DateTime?
+  endTime            DateTime?
+  totalBags          Int
+  totalGrossWeightKg Int
+  totalNetWeightKg   Int
+  tareWeightKg       Int // Weight of bags/packaging
+  sealNumber         String?
+  sealNumber2        String? // Some containers use 2 seals
+  supervisorId       String
+  supervisor         User             @relation("Supervisor", fields: [supervisorId], references: [id])
+  verifiedById       String?
+  verifiedBy         User?            @relation("VerifiedBy", fields: [verifiedById], references: [id])
+  status             LoadingStatus    @default(SCHEDULED)
+  notes              String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  // Relationships
+  bagDetails LoadingBagDetail[]
+
+  @@index([tallyNumber])
+  @@index([orderId])
+  @@index([containerNumber])
+  @@index([status])
+  @@map("loading_tallies")
+}
+
+model LoadingBagDetail {
+  id        String       @id @default(cuid())
+  tallyId   String
+  tally     LoadingTally @relation(fields: [tallyId], references: [id], onDelete: Cascade)
+  bagNumber Int // Sequential: 1, 2, 3...
+  weightKg  Int
+  lotNumber String? // For traceability
+  loadedAt  DateTime     @default(now())
+
+  @@index([tallyId])
+  @@index([lotNumber])
+  @@map("loading_bag_details")
+}
+
+// ======================
+// TRANSPORT & LOGISTICS
+// ======================
+
+enum TransportStatus {
+  PLANNED
+  DEPARTED_WAREHOUSE
+  AT_CHECKPOINT_1
+  AT_BORDER
+  BORDER_CLEARED
+  AT_CHECKPOINT_2
+  AT_PORT
+  DELIVERED_TO_SHIPPING_LINE
+  COMPLETED
+  DELAYED
+}
+
+model TransportJob {
+  id               String          @id @default(cuid())
+  jobNumber        String          @unique // e.g., "TJ-2025-10-034"
+  orderId          String
+  order            ExportOrder     @relation(fields: [orderId], references: [id])
+  truckNumber      String
+  driverName       String
+  driverPhone      String
+  transportCompany String?
+  containerNumbers String // JSON array or comma-separated
+  route            String // e.g., "KAMPALA_MOMBASA"
+  departureTime    DateTime?
+  estimatedArrival DateTime?
+  actualArrival    DateTime?
+  status           TransportStatus @default(PLANNED)
+  createdById      String
+  createdBy        User            @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relationships
+  checkpoints TransportCheckpoint[]
+
+  @@index([jobNumber])
+  @@index([orderId])
+  @@index([truckNumber])
+  @@index([status])
+  @@map("transport_jobs")
+}
+
+model TransportCheckpoint {
+  id             String       @id @default(cuid())
+  jobId          String
+  job            TransportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  checkpointName String // e.g., "JINJA_WEIGHBRIDGE", "MALABA_BORDER"
+  expectedTime   DateTime?
+  actualTime     DateTime?
+  status         String // e.g., "REACHED", "DELAYED", "PENDING"
+  delayReason    String?
+  notes          String?
+  gpsLatitude    String?
+  gpsLongitude   String?
+
+  @@index([jobId])
+  @@index([checkpointName])
+  @@map("transport_checkpoints")
+}
+
+// ======================
+// EXPORT DOCUMENTATION
+// ======================
+
+enum DocumentType {
+  COMMERCIAL_INVOICE
+  PACKING_LIST
+  CERTIFICATE_OF_ORIGIN
+  PHYTOSANITARY_CERTIFICATE
+  ICO_CERTIFICATE
+  QUALITY_CERTIFICATE
+  BILL_OF_LADING
+  INSURANCE_CERTIFICATE
+  NON_GMO_DECLARATION
+  WEIGHT_NOTE
+  FUMIGATION_CERTIFICATE
+}
+
+enum DocumentStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ISSUED
+  SUBMITTED_TO_BANK
+  SUBMITTED_TO_BUYER
+  SUBMITTED_TO_CUSTOMS
+  ARCHIVED
+}
+
+model ExportDocument {
+  id             String         @id @default(cuid())
+  documentNumber String         @unique // e.g., "DOC-2025-10-089"
+  orderId        String
+  order          ExportOrder    @relation(fields: [orderId], references: [id])
+  documentType   DocumentType
+  documentName   String // e.g., "Commercial Invoice - Italy Order"
+  filePath       String? // PDF storage path
+  issueDate      DateTime       @default(now())
+  expiryDate     DateTime?
+  issuedById     String
+  issuedBy       User           @relation("IssuedBy", fields: [issuedById], references: [id])
+  status         DocumentStatus @default(DRAFT)
+  submittedTo    String? // e.g., "BUYER", "BANK", "CUSTOMS"
+  submittedAt    DateTime?
+  notes          String?
+  metadata       Json? // Additional document-specific data
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([documentNumber])
+  @@index([orderId])
+  @@index([documentType])
+  @@index([status])
+  @@map("export_documents")
+}
+
+// ======================
+// FINANCIAL MANAGEMENT
+// ======================
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  MOBILE_MONEY
+  CASH
+  CHEQUE
+}
+
+model TraderPayment {
+  id               String           @id @default(cuid())
+  paymentNumber    String           @unique // e.g., "TP-2025-10-234"
+  bwnId            String
+  bwn              BuyingWeightNote @relation(fields: [bwnId], references: [id])
+  traderId         String
+  trader           Trader           @relation(fields: [traderId], references: [id])
+  amountUGX        BigInt
+  paymentMethod    PaymentMethod
+  paymentReference String? // Bank transaction ref or mobile money ref
+  status           PaymentStatus    @default(PENDING)
+  approvedDate     DateTime?
+  paidDate         DateTime?
+  processedById    String?
+  processedBy      User?            @relation("ProcessedBy", fields: [processedById], references: [id])
+  bankName         String?
+  accountNumber    String?
+  notes            String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([paymentNumber])
+  @@index([bwnId])
+  @@index([traderId])
+  @@index([status])
+  @@map("trader_payments")
+}
+
+enum ExportPaymentType {
+  LETTER_OF_CREDIT
+  ADVANCE_PAYMENT
+  OPEN_ACCOUNT
+  CONSIGNMENT
+  DOCUMENTARY_COLLECTION
+}
+
+model ExportPayment {
+  id             String            @id @default(cuid())
+  paymentNumber  String            @unique // e.g., "EP-2025-10-045"
+  orderId        String
+  order          ExportOrder       @relation(fields: [orderId], references: [id])
+  paymentType    ExportPaymentType
+  amountUSD      BigInt // Stored as cents
+  exchangeRate   Int // UGX per USD (e.g., 3750 = 3750 UGX/$)
+  amountUGX      BigInt // Calculated amount in UGX
+  lcNumber       String? // Letter of Credit number
+  lcIssuingBank  String?
+  lcExpiryDate   DateTime?
+  expectedDate   DateTime?
+  receivedDate   DateTime?
+  status         PaymentStatus     @default(PENDING)
+  processedById  String?
+  processedBy    User?             @relation("ProcessedBy", fields: [processedById], references: [id])
+  bankChargesUSD BigInt? // Bank fees deducted
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([paymentNumber])
+  @@index([orderId])
+  @@index([status])
+  @@map("export_payments")
+}
+
+model CashFlowProjection {
+  id                    String   @id @default(cuid())
+  month                 Int // 1-12
+  year                  Int
+  projectedPurchasesUGX BigInt
+  projectedExportsUSD   BigInt
+  projectedExportsUGX   BigInt // Converted at estimated rate
+  estimatedMarginUGX    BigInt
+  actualPurchasesUGX    BigInt   @default(0)
+  actualExportsUGX      BigInt   @default(0)
+  actualMarginUGX       BigInt   @default(0)
+  varianceUGX           BigInt   @default(0)
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([year, month])
+  @@index([year, month])
+  @@map("cash_flow_projections")
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  usdToUgx  Int // e.g., 3750 = 1 USD = 3750 UGX
+  source    String // e.g., "BANK_OF_UGANDA", "MANUAL_ENTRY"
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@map("exchange_rates")
+}
+
+// ======================
+// SYSTEM ALERTS & NOTIFICATIONS
+// ======================
+
+enum AlertType {
+  INVENTORY_LOW
+  AGED_STOCK_WARNING
+  QUALITY_REJECTION
+  PAYMENT_DUE
+  SHIPMENT_DELAY
+  CONTAINER_DEMURRAGE_RISK
+  BUDGET_EXCEEDED
+  TARGET_NOT_MET
+  SYSTEM_ERROR
+  DOCUMENT_EXPIRING
+}
+
+enum AlertPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+model SystemAlert {
+  id               String        @id @default(cuid())
+  alertType        AlertType
+  priority         AlertPriority
+  title            String
+  message          String
+  relatedModule    String? // e.g., "INVENTORY", "EXPORT_ORDERS"
+  relatedRecordId  String? // ID of related record
+  status           AlertStatus   @default(ACTIVE)
+  acknowledgedById String?
+  acknowledgedBy   User?         @relation("AcknowledgedBy", fields: [acknowledgedById], references: [id])
+  acknowledgedAt   DateTime?
+  resolvedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([alertType])
+  @@index([priority])
+  @@index([status])
+  @@index([createdAt])
+  @@map("system_alerts")
+}
+
+// ======================
+// REPORTING & ANALYTICS
+// ======================
+
+model DailyOperationsSummary {
+  id                  String   @id @default(cuid())
+  date                DateTime @unique
+  totalPurchasesKg    Int      @default(0)
+  totalPurchasesUGX   BigInt   @default(0)
+  arabicaPurchasedKg  Int      @default(0)
+  robustaPurchasedKg  Int      @default(0)
+  tradersDelivered    Int      @default(0)
+  qualityPassRate     Int      @default(0) // Percentage
+  qualityRejections   Int      @default(0)
+  dryingOrdersCreated Int      @default(0)
+  exportOrdersCreated Int      @default(0)
+  containersLoaded    Int      @default(0)
+  createdAt           DateTime @default(now())
+
+  @@index([date])
+  @@map("daily_operations_summary")
+}
+
+model WeeklyPerformanceReport {
+  id                      String   @id @default(cuid())
+  weekNumber              Int // 1-52
+  year                    Int
+  weekStartDate           DateTime
+  weekEndDate             DateTime
+  totalPurchasesKg        Int      @default(0)
+  totalExportsKg          Int      @default(0)
+  inventoryTurnoverDays   Int      @default(0)
+  averagePurchasePriceUGX Int      @default(0)
+  topTraderId             String?
+  topTraderVolume         Int      @default(0)
+  qualityAcceptanceRate   Int      @default(0)
+  createdAt               DateTime @default(now())
+
+  @@unique([year, weekNumber])
+  @@index([year, weekNumber])
+  @@map("weekly_performance_reports")
+}
+
+model ProfitabilityAnalysis {
+  id                   String   @id @default(cuid())
+  orderId              String   @unique
+  orderNumber          String
+  totalRevenueUSD      BigInt // In cents
+  totalRevenueUGX      BigInt
+  purchaseCostUGX      BigInt // Cost of coffee purchased
+  dryingCostUGX        BigInt
+  transportCostUGX     BigInt
+  documentationCostUGX BigInt
+  bankChargesUGX       BigInt
+  otherCostsUGX        BigInt
+  totalCostUGX         BigInt
+  grossProfitUGX       BigInt
+  profitMarginPercent  Int // Percentage
+  createdAt            DateTime @default(now())
+
+  @@index([orderId])
+  @@index([orderNumber])
+  @@map("profitability_analysis")
+}
+
+// ======================
+// SYSTEM CONFIGURATION
+// ======================
+
+model SystemConfiguration {
+  id          String   @id @default(cuid())
+  configKey   String   @unique // e.g., "FAQ_MAX_DEFECTS", "TARGET_MOISTURE_MC"
+  configValue String // Stored as string, parse as needed
+  description String?
+  category    String // e.g., "QUALITY_STANDARDS", "PRICING", "OPERATIONS"
+  isActive    Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+
+  @@index([configKey])
+  @@index([category])
+  @@map("system_configuration")
+}
+
+model BusinessMetrics {
+  id                      String   @id @default(cuid())
+  metricDate              DateTime @unique
+  totalInventoryKg        Int
+  arabicaInventoryKg      Int
+  robustInventoryKg       Int
+  averageInventoryAgeDays Int
+  activeTraders           Int
+  pendingOrders           Int
+  ordersInTransit         Int
+  monthlyPurchaseTargetKg Int
+  monthlyPurchaseActualKg Int
+  workingCapitalUGX       BigInt
+  createdAt               DateTime @default(now())
+
+  @@index([metricDate])
+  @@map("business_metrics")
+}
