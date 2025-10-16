@@ -53,11 +53,15 @@ export const getCurrentUser = cache(
         return null;
       }
 
+      // Type assertion to ensure role is properly typed as UserRole
+      const userRole = user.role as UserRole;
+
       // Get permissions based on role
-      const permissions = ROLES_PERMISSIONS[user.role]?.permissions || [];
+      const permissions = ROLES_PERMISSIONS[userRole]?.permissions || [];
 
       return {
         ...user,
+        role: userRole,
         permissions: [...permissions],
       };
     } catch (error) {
