@@ -91,6 +91,7 @@ export async function loginUser(data: LoginFormValues) {
     };
   }
 }
+
 type SendMailData = {
   to: string;
   subject: string;
