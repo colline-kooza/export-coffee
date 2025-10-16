@@ -160,9 +160,9 @@ export default function Signup() {
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel>Password</FormLabel>
-                    <FormControl>
+                    {/* <FormControl>
                       <Input isPassword type="password" {...field} />
-                    </FormControl>
+                    </FormControl> */}
                     <FormMessage />
                   </FormItem>
                 )}
