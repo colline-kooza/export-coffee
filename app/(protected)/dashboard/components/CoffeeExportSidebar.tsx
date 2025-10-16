@@ -184,7 +184,7 @@ export default function CoffeeSidebar({ userPermissions = [] }: CoffeeSidebarPro
   const pathname = usePathname();
 
   // Use provided permissions or fall back to defaults
-  const permissions = userPermissions.length > 0 ? userPermissions : defaultPermissions;
+  const permissions =  defaultPermissions;
 
   const handleNavigation = () => {
     setIsMobileMenuOpen(false);

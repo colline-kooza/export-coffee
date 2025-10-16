@@ -19,6 +19,8 @@ export const ROLES_PERMISSIONS = {
       "users.delete",
       "roles.manage",
       "permissions.manage",
+      "user.manage",
+      // "kooza.view",
 
       // Trader Management
       "traders.view",
