@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import { JSX, ReactNode } from "react";
 import {
+<<<<<<< HEAD
+=======
   // getCurrentStaff,
+>>>>>>> 7ac891623424698e0974a9474fbbbb5aa478bc7d
   hasPermission,
   hasAnyPermission,
   hasRole,
@@ -112,6 +115,58 @@ export async function ProtectedPage({
   // }
 
   // return <>{children}</>;
+// }
+
+let hasAccess = true;
+
+// Check single permission
+// if (requiredPermission) {
+//   hasAccess = await hasPermission(requiredPermission);
+// }
+
+// Check multiple permissions
+// if (requiredPermissions && requiredPermissions.length > 0) {
+//   if (requireAllPermissions) {
+//     // Require all permissions
+//     const checks = await Promise.all(
+//       requiredPermissions.map((perm) => hasPermission(perm))
+//     );
+//     hasAccess = checks.every((check) => check);
+//   } else {
+//     // Require any permission
+//     const checks = await Promise.all(
+//       requiredPermissions.map((perm) => hasPermission(perm))
+//     );
+//     hasAccess = checks.some((check) => check);
+//   }
+// }
+
+// Check single role
+// if (requiredRole && hasAccess) {
+//   hasAccess = await hasRole(requiredRole);
+// }
+
+// Check multiple roles
+// if (requiredRoles && requiredRoles.length > 0 && hasAccess) {
+//   hasAccess = await hasAnyRole(requiredRoles);
+// }
+
+//   if (!hasAccess) {
+//     if (redirectTo) {
+//       redirect(redirectTo);
+//     }
+//     if (fallback) {
+//       return <>{fallback}</>;
+//     }
+//     return (
+//       <UnauthorizedFallback
+//         message="Access Denied"
+//         description="You don't have permission to access this page."
+//       />
+//     );
+//   }
+
+//   return <>{children}</>;
 // }
 
 /**

@@ -28,7 +28,7 @@ import SubmitButton from "./SubmitButton";
 import { RegisterFormValues, RegisterUserSchema } from "../types/user.schema";
 import { registerUser } from "../actions/users";
 import { Input } from "@/components/ui/input";
-import { config } from "@/config/site";
+// import { config } from "@/config/site";
 
 export default function Signup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,7 +88,7 @@ export default function Signup() {
       <div className="bg-card m-auto h-fit w-full max-w-md rounded-[calc(var(--radius)+.125rem)] border p-0.5 shadow-md dark:[--color-muted:var(--color-zinc-900)]">
         <div className="p-8 pb-6">
           <AuthHeader
-            title={`Create a ${config.name} Account`}
+            title={`Create a Coffee export Account`}
             subTitle="Welcome! Create an account to get started"
           />
           <SocialButtons />

@@ -14,7 +14,7 @@ export default function PageLayout({
   return (
     <div>
       <SiteHeader user={user} title={title} />
-      <div className="p-8">{children}</div>
+      <div className="">{children}</div>
     </div>
   );
 }
