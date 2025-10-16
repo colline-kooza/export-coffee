@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
-import React from "react";
+import React from 'react'
+import HeroSection from './components/HeroSection'
 
 export default function page() {
-  redirect("/login");
   return (
     <div>
-      <h2>Welcome too Lendbox</h2>
+      <HeroSection/>
     </div>
-  );
+  )
 }
