@@ -20,7 +20,7 @@ export function StatCard({
   description,
 }: StatCardProps) {
   return (
-    <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
+    <Card className="bg-gradient-to-br from-white to-slate-50 border-[1px] border-slate-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-slate-600">
           {title}

@@ -6,18 +6,21 @@ import {
   CheckCircle,
   DollarSign,
   Leaf,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { StatCard } from "./stat-card";
+import { ActivityList } from "./activity-list";
+import { WeeklyTrendsChart } from "./weekly-trends-chart";
+import { TraderPerformanceChart } from "./trader-performance-chart";
 import {
-  dummyAlerts,
   dummyDailyMetrics,
   dummyExportOrders,
   dummyFinancialMetrics,
   dummyWeeklyMetrics,
 } from "../dammy/dammy-data";
-import { ActivityList } from "./activity-list";
 
-export default function DashboardPage() {
+export default function AdminDashboardPage() {
   const recentActivities = [
     {
       id: "1",
@@ -76,9 +79,7 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Weekly Revenue"
-          value={`$${(dummyFinancialMetrics.totalRevenueUSD / 1000).toFixed(
-            1
-          )}K`}
+          value={`$${(dummyFinancialMetrics.totalRevenueUSD / 1000).toFixed(1)}K`}
           icon={DollarSign}
           description={`Margin: ${dummyFinancialMetrics.profitMarginPercent}%`}
           trend={{ value: 5, isPositive: true }}
@@ -87,60 +88,69 @@ export default function DashboardPage() {
 
       {/* Weekly Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-amber-50 to-orange-100 border-amber-300">
           <CardHeader>
-            <CardTitle className="text-sm text-blue-900">
+            <CardTitle className="text-sm text-amber-900 flex items-center gap-2">
+              <TrendingDown className="h-4 w-4" />
               Weekly Purchases
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-900">
+            <div className="text-lg font-bold text-amber-900">
               {dummyWeeklyMetrics.totalPurchasesKg.toLocaleString()} kg
             </div>
-            <p className="text-xs text-blue-700 mt-2">
-              Avg price: UGX {dummyWeeklyMetrics.averagePurchasePriceUGX}/kg
+            <p className="text-xs text-amber-700 mt-2">
+              Avg price: UGX{" "}
+              {dummyWeeklyMetrics.averagePurchasePriceUGX.toLocaleString()}/kg
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-300">
           <CardHeader>
-            <CardTitle className="text-sm text-green-900">
+            <CardTitle className="text-sm text-yellow-900 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
               Weekly Exports
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-900">
+            <div className="text-lg font-bold text-yellow-900">
               {dummyWeeklyMetrics.totalExportsKg.toLocaleString()} kg
             </div>
-            <p className="text-xs text-green-700 mt-2">
+            <p className="text-xs text-yellow-700 mt-2">
               Turnover: {dummyWeeklyMetrics.inventoryTurnoverDays} days
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+        <Card className="bg-gradient-to-br from-orange-50 to-amber-100 border-orange-300">
           <CardHeader>
-            <CardTitle className="text-sm text-amber-900">
+            <CardTitle className="text-sm text-orange-900 flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
               Gross Profit
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold text-amber-900">
+            <div className="text-lg font-bold text-orange-900">
               UGX {(dummyFinancialMetrics.grossProfitUGX / 1000000).toFixed(1)}M
             </div>
-            <p className="text-xs text-amber-700 mt-2">
+            <p className="text-xs text-orange-700 mt-2">
               Margin: {dummyFinancialMetrics.profitMarginPercent}%
             </p>
           </CardContent>
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <WeeklyTrendsChart />
+        <TraderPerformanceChart />
+      </div>
+
       {/* Activities and Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ActivityList title="Recent Activities" activities={recentActivities} />
 
-        <Card className="bg-white border-slate-200">
+        {/* <Card className="bg-white border-slate-200">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-red-600" />
@@ -166,7 +176,7 @@ export default function DashboardPage() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

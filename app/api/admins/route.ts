@@ -19,10 +19,10 @@ export async function GET() {
       where: {
         OR: [
           {
-            role: "ADMIN",
+            role: "SYSTEM_ADMIN",
           },
           {
-            role: "ASSISTANT_ADMIN",
+            role: "OPERATIONS_MANAGER",
           },
         ],
       },

@@ -11,7 +11,7 @@ interface Activity {
 
 interface ActivityListProps {
   title: string;
-  activities: Activity[];
+  activities: any[];
 }
 
 export function ActivityList({ title, activities }: ActivityListProps) {

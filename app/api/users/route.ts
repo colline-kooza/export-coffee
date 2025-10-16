@@ -4,11 +4,10 @@ import db from "@/prisma/db";
 
 export async function GET() {
   try {
-  
     const users = await db.user.findMany({
       orderBy: { createdAt: "desc" },
       where: {
-        role: "USER",
+        role: "SYSTEM_ADMIN",
       },
     });
     return new Response(JSON.stringify(users), {

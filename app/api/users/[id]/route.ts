@@ -8,26 +8,26 @@ export async function DELETE(
   try {
     const id = (await params).id;
 
-    const existingCode = await db.verificationCode.findUnique({
-      where: {
-        id: id,
-      },
-    });
-    if (!existingCode) {
-      return new Response(
-        JSON.stringify({
-          error: "This Code does not exist",
-        }),
-        {
-          status: 404,
-        }
-      );
-    }
-    await db.verificationCode.delete({
-      where: {
-        id: id,
-      },
-    });
+    // const existingCode = await db.verificationCode.findUnique({
+    //   where: {
+    //     id: id,
+    //   },
+    // });
+    // if (!existingCode) {
+    //   return new Response(
+    //     JSON.stringify({
+    //       error: "This Code does not exist",
+    //     }),
+    //     {
+    //       status: 404,
+    //     }
+    //   );
+    // }
+    // await db.verificationCode.delete({
+    //   where: {
+    //     id: id,
+    //   },
+    // });
     return new Response(JSON.stringify(null), {
       status: 200,
     });

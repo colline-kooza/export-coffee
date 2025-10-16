@@ -1,9 +1,9 @@
-import { OnboardingStatus } from "@/types/onboarding";
+// import { OnboardingStatus } from "@/types/onboarding";
 import { useState, useEffect } from "react";
 // import { OnboardingStatus } from "@/types/onboarding";
 
 export function useOnboardingStatus() {
-  const [status, setStatus] = useState<OnboardingStatus | null>(null);
+  const [status, setStatus] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
