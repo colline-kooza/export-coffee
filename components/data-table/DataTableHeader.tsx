@@ -76,7 +76,9 @@ export function DataTableHeader({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="w-1 h-8 bg-gradient-to-b from-primary to-primary/50 rounded-full"></div>
-            <h1 className="text-xl f bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent font-bold tracking-tight  sm:text-xl">{title}</h1>
+            <h1 className="text-xl f bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent font-bold tracking-tight  sm:text-xl">
+              {title}
+            </h1>
           </div>
           {subtitle && <p className="text-gray-600 max-w-2xl leading-relaxed ml-2 text-sm">{subtitle}</p>}
         </div>

@@ -18,12 +18,12 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       where: {
         OR: [
-          {
-            role: "ADMIN",
-          },
-          {
-            role: "ASSISTANT_ADMIN",
-          },
+          // {
+          //   role: "ADMIN",
+          // },
+          // {
+          //   role: "ASSISTANT_ADMIN",
+          // },
         ],
       },
     });

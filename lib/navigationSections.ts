@@ -70,12 +70,12 @@ export const navigationSections: NavigationSection[] = [
         label: "Trader Management",
         permissions: ["traders.view"],
       },
-      {
-        href: "/dashboard/kooza",
-        icon: Users,
-        label: "Kooza Management",
-        permissions: ["traders.view"] /**kooza.view */,
-      },
+      //   {
+      //     href: "/dashboard/kooza",
+      //     icon: Users,
+      //     label: "Kooza Management",
+      //     permissions: ["traders.view"] /**kooza.view */,
+      //   },
     ],
   },
   {
@@ -105,11 +105,11 @@ export const navigationSections: NavigationSection[] = [
             label: "All Readings",
             permissions: ["buying.view"],
           },
-          {
-            href: "/dashboard/procurement/weighbridge/new",
-            label: "New Weighing",
-            permissions: ["buying.create"],
-          },
+          //   {
+          //     href: "/dashboard/procurement/weighbridge/new",
+          //     label: "New Weighing",
+          //     permissions: ["buying.create"],
+          //   },
         ],
       },
       {

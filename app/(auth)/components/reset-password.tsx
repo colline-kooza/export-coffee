@@ -88,9 +88,9 @@ export default function ResetPassword({ token }: { token: string }) {
                     <FormLabel className="block text-sm">
                       New Password
                     </FormLabel>
-                    <FormControl>
+                    {/* <FormControl>
                       <Input isPassword type="password" {...field} />
-                    </FormControl>
+                    </FormControl> */}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -104,9 +104,9 @@ export default function ResetPassword({ token }: { token: string }) {
                     <FormLabel className="block text-sm">
                       Confirm Password
                     </FormLabel>
-                    <FormControl>
+                    {/* <FormControl>
                       <Input isPassword type="password" {...field} />
-                    </FormControl>
+                    </FormControl> */}
                     <FormMessage />
                   </FormItem>
                 )}
