@@ -1,10 +1,6 @@
 import { redirect } from "next/navigation";
 import { JSX, ReactNode } from "react";
 import {
-<<<<<<< HEAD
-=======
-  // getCurrentStaff,
->>>>>>> 7ac891623424698e0974a9474fbbbb5aa478bc7d
   hasPermission,
   hasAnyPermission,
   hasRole,
@@ -117,7 +113,7 @@ export async function ProtectedPage({
   // return <>{children}</>;
 // }
 
-let hasAccess = true;
+// let hasAccess = true;
 
 // Check single permission
 // if (requiredPermission) {

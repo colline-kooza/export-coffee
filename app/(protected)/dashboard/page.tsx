@@ -3,15 +3,12 @@ import { redirect } from "next/navigation";
 
 import { auth, getAuthUser } from "@/lib/auth"; // Adjust to your auth implementation
 import PageLayout from "./components/PageLayout";
-import AdminDashboard from "./components/AdminDashboard";
-import VendorDashboard from "./components/VendorDashboard";
-import UserDashboard from "./components/UserDashboard";
 import AdminDashboardPage from "@/app/(dashboard)/components/dash-page";
-import ProcurementDashboard from "@/app/(dashboard)/components/procurement/procurementDash";
-import WarehouseDashboard from "@/app/(dashboard)/components/warehouse/warehouseDash";
-import SalesDashboard from "@/app/(dashboard)/components/sales/salesDash";
-import FinanceDashboard from "@/app/(dashboard)/components/finance/financeDash";
-import OperationsDashboard from "@/app/(dashboard)/components/operations/operationsDash";
+import WarehouseDashboard from "./componentss/warehouse/warehouseDash";
+import SalesDashboard from "./componentss/sales/salesDash";
+import FinanceDashboard from "./componentss/finance/financeDash";
+import OperationsDashboard from "./componentss/operations/operationsDash";
+import ProcurementDashboard from "./componentss/procurement/procurementDash";
 
 export default async function DashboardPage() {
   const user = await getAuthUser();

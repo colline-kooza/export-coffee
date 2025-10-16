@@ -13,8 +13,12 @@ import { StatCard } from "./stat-card";
 import { ActivityList } from "./activity-list";
 import { WeeklyTrendsChart } from "./weekly-trends-chart";
 import { TraderPerformanceChart } from "./trader-performance-chart";
-import { dummyDailyMetrics, dummyExportOrders, dummyFinancialMetrics, dummyWeeklyMetrics } from "@/lib/dummy-data";
-
+import {
+  dummyDailyMetrics,
+  dummyExportOrders,
+  dummyFinancialMetrics,
+  dummyWeeklyMetrics,
+} from "../dammy/dammy-data";
 
 export default function AdminDashboardPage() {
   const recentActivities = [
