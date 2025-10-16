@@ -56,19 +56,19 @@
   --popover-foreground: oklch(0.145 0.02 247.86);
 
   /* Primary: Modern Dark Blue (Fintech) */
-  --primary:#985145; /* Rich dark blue #1e3a8a equivalent */
+  --primary: #985145; /* Rich dark blue #1e3a8a equivalent */
   --primary-foreground: oklch(0.99 0.002 247.86);
 
   --secondary: oklch(0.96 0.005 247.86);
-  --secondary-foreground:#985145;
+  --secondary-foreground: #985145;
   --muted: oklch(0.96 0.005 247.86);
-  --muted-foreground: oklch(0.556 0.02 247.86);
-  --accent: oklch(0.5 0.15 255); /* Brighter blue for accents */
+  --muted-foreground: oklch(0.99 0.002 247.86);
+  --accent: #985145; /* Brighter blue for accents */
   --accent-foreground: oklch(0.99 0.002 247.86);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.9 0.005 247.86);
   --input: oklch(0.9 0.005 247.86);
-  --ring: oklch(0.5 0.15 255);
+  --ring: #985145;
 
   /* Charts with blue theme */
   --chart-1: oklch(0.5 0.15 255); /* Blue */
@@ -78,14 +78,14 @@
   --chart-5: oklch(0.6 0.15 300); /* Magenta */
 
   /* Sidebar: Primary dark blue background */
-  --sidebar:#985145; /* Same as primary */
+  --sidebar: #985145; /* Same as primary */
   --sidebar-foreground: oklch(0.99 0.002 247.86); /* White text */
-  --sidebar-primary: oklch(0.5 0.15 255); /* Lighter blue for active items */
+  --sidebar-primary: #985145; /* Lighter blue for active items */
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.45 0.13 255); /* Slightly lighter than sidebar bg */
+  --sidebar-accent: #985145; /* Slightly lighter than sidebar bg */
   --sidebar-accent-foreground: oklch(0.99 0.002 247.86);
-  --sidebar-border: oklch(0.45 0.13 255); /* Subtle border */
-  --sidebar-ring: oklch(0.5 0.15 255);
+  --sidebar-border: #985145; /* Subtle border */
+  --sidebar-ring: #985145;
 }
 
 .dark {
