@@ -4,16 +4,7 @@ import db from "@/prisma/db";
 
 export async function GET() {
   try {
-    // if (!API_KEY) {
-    //   return new Response(
-    //     JSON.stringify({
-    //       error: "API Key is Required",
-    //     }),
-    //     {
-    //       status: 401,
-    //     }
-    //   );
-    // }
+  
     const users = await db.user.findMany({
       orderBy: { createdAt: "desc" },
       where: {
