@@ -5,10 +5,11 @@ import { Eye, EyeOff, ChevronLeft } from "lucide-react";
 import { AiOutlineSwapLeft, AiOutlineSwapRight } from "react-icons/ai";
 import { loginUser } from "../actions/users";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const defaultCarouselImages = [
   {
-    url: "https://img.freepik.com/premium-photo/close-up-coffee-beans-table_1048944-1765420.jpg?ga=GA1.1.1341149691.1749741454&w=740&q=80",
+    url: "https://img.freepik.com/premium-photo/falling-coffee-beans-dark-background-with-copy-space_88281-11.jpg?ga=GA1.1.1341149691.1749741454&w=740&q=80",
     alt: "Coffee beans in warehouse",
   },
   // {
@@ -33,7 +34,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({ email: "", password: "" });
-
+  const router=useRouter()
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % defaultCarouselImages.length);
@@ -85,7 +86,8 @@ export default function LoginForm() {
         setEmail("");
         setPassword("");
         setIsLoading(false);
-        toast.success(`Welcomeback into your account`);
+        toast.success(`Welcomeback into your ${res.data?.user.name}`);
+        router.push("/dashboard")
       } else {
         setIsLoading(false);
         toast.error("Wrong credentials.");
@@ -94,7 +96,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex relative overflow-hidden">
+    <div className="min-h-screen flex relative overflow-hidden ">
       {/* Right Side - Image Carousel (positioned first for z-index) */}
       <div className="hidden lg:block absolute inset-0 w-full h-full">
         {defaultCarouselImages.map((image, index) => (
@@ -112,7 +114,7 @@ export default function LoginForm() {
           </div>
         ))}
 
-        <div className="absolute inset-0 bg-gradient-to-r from-white from-0% via-gray-100 via-30% to-primary/45 to-100% z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-white from-0% via-transparent via-80% to-transparent to-transparent z-0"></div>
 
         <div className="absolute bottom-6 right-8 flex items-center space-x-2 z-10">
           <button
@@ -141,8 +143,8 @@ export default function LoginForm() {
       </div>
 
       {/* Left Side - Login Form with seamless gradient blend */}
-      <div className="relative z-10 flex-1 lg:flex-none lg:w-[55%] flex items-center justify-center p-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white to-transparent pointer-events-none"></div>
+      <div className="relative z-10 flex-1 lg:flex-none lg:w-[65%] flex items-center md:items-start justify-center p-2">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-50 via-white to-transparent pointer-events-none"></div>
 
         <div className="relative z-10 w-full">
           <button
@@ -153,7 +155,7 @@ export default function LoginForm() {
             Back
           </button>
 
-          <div className="w-full max-w-md mx-auto pt-20">
+          <div className="w-full max-w-md mx-auto pt-20 md:pt-38">
             <div className="mb-8">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="h-12 w-12 bg-gradient-to-br from-primary to-primary rounded-lg flex items-center justify-center">
@@ -186,7 +188,7 @@ export default function LoginForm() {
                   <input
                     type="email"
                     placeholder=""
-                    className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full h-12 px-4 border  rounded-lg border-primary ring-2 ring-primary/20 outline-none transition-all text-sm"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -204,7 +206,7 @@ export default function LoginForm() {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="* * * * * *"
-                    className="w-full h-12 px-4 pr-10 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="w-full h-12 px-4 pr-10 border border-gray-300 rounded-lg border-primary ring-2 ring-primary/20 outline-none transition-all text-sm"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -232,7 +234,7 @@ export default function LoginForm() {
                     id="remember"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 text-primary border-gray-400 rounded focus:ring-primary"
+                    className="w-4 h-4 text-primary border-gray-400 rounded ring-primary"
                   />
                   <label
                     htmlFor="remember"
@@ -254,7 +256,7 @@ export default function LoginForm() {
 
               <button
                 type="button"
-                className="w-full h-12 bg-primary hover:bg-primary text-white font-medium rounded-lg text-sm transition-colors disabled:opacity-50"
+                className="w-full h-12 bg-primary hover:bg-primary text-white font-medium rounded-lg text-sm transition-colors disabled:opacity-50 cursor-pointer"
                 disabled={isLoading}
                 onClick={handleSubmit}
               >

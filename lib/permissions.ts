@@ -1,280 +1,367 @@
 /**
- * Permission Constants and Utilities
- * Centralized permission definitions for the application
+ * COFFEE MANAGEMENT SYSTEM - Permissions & Roles
+ * Centralized permission definitions for role-based access control
  */
 
 // ============================================
-// PERMISSION CONSTANTS
+// ROLE DEFINITIONS WITH PERMISSIONS
 // ============================================
 
-export const PERMISSIONS = {
-  // Dashboard
-  DASHBOARD: {
-    VIEW: "dashboard.view",
+export const ROLES_PERMISSIONS = {
+  SYSTEM_ADMIN: {
+    label: "System Admin",
+    description: "Full system access",
+    permissions: [
+      // User Management
+      "users.view",
+      "users.create",
+      "users.update",
+      "users.delete",
+      "roles.manage",
+      "permissions.manage",
+      "user.manage",
+      // "kooza.view",
+
+      // Trader Management
+      "traders.view",
+      "traders.create",
+      "traders.update",
+      "traders.delete",
+      "traders.approve",
+
+      // Procurement & Buying
+      "buying.view",
+      "buying.create",
+      "buying.approve",
+      "buying.payment",
+
+      // Quality Control
+      "quality.view",
+      "quality.create",
+      "quality.approve",
+
+      // Inventory
+      "inventory.view",
+      "inventory.create",
+      "inventory.update",
+      "inventory.adjust",
+
+      // Drying & Processing
+      "drying.view",
+      "drying.create",
+      "drying.manage",
+
+      // Export Orders
+      "export.view",
+      "export.create",
+      "export.manage",
+      "export.approve",
+
+      // Transport & Logistics
+      "transport.view",
+      "transport.create",
+      "transport.manage",
+
+      // Financial
+      "payments.view",
+      "payments.create",
+      "payments.approve",
+      "reports.view",
+      "reports.export",
+
+      // System
+      "audit.view",
+      "alerts.manage",
+      "settings.view",
+      "settings.update",
+    ],
   },
 
-  // Institutions
-  INSTITUTIONS: {
-    VIEW: "institutions.view",
-    CREATE: "institutions.create",
-    UPDATE: "institutions.update",
-    DELETE: "institutions.delete",
+  PROCUREMENT_QUALITY_MANAGER: {
+    label: "Procurement & Quality Manager",
+    description: "Manages procurement and quality control",
+    permissions: [
+      // Trader Management
+      "traders.view",
+      "traders.create",
+      "traders.update",
+
+      // Buying
+      "buying.view",
+      "buying.create",
+      "buying.approve",
+
+      // Quality Control
+      "quality.view",
+      "quality.create",
+      "quality.approve",
+
+      // Inventory
+      "inventory.view",
+      "inventory.create",
+
+      // Reports
+      "reports.view",
+      "reports.export",
+    ],
   },
 
-  // Branches
-  BRANCHES: {
-    VIEW: "branches.view",
-    CREATE: "branches.create",
-    UPDATE: "branches.update",
-    DELETE: "branches.delete",
+  WAREHOUSE_INVENTORY_OFFICER: {
+    label: "Warehouse & Inventory Officer",
+    description: "Manages warehouse operations and inventory",
+    permissions: [
+      // Inventory
+      "inventory.view",
+      "inventory.create",
+      "inventory.update",
+      "inventory.adjust",
+
+      // Stock Receipts
+      "stock.view",
+      "stock.create",
+      "stock.verify",
+
+      // Physical Counts
+      "counts.view",
+      "counts.create",
+
+      // Drying
+      "drying.view",
+      "drying.create",
+
+      // Storage
+      "storage.view",
+      "storage.manage",
+
+      // Reports
+      "reports.view",
+    ],
   },
 
-  // Borrowers
-  BORROWERS: {
-    VIEW: "borrowers.view",
-    CREATE: "borrowers.create",
-    UPDATE: "borrowers.update",
-    DELETE: "borrowers.delete",
+  SALES_LOGISTICS_MANAGER: {
+    label: "Sales & Logistics Manager",
+    description: "Manages export orders and transportation",
+    permissions: [
+      // Export Orders
+      "export.view",
+      "export.create",
+      "export.manage",
+
+      // Container Management
+      "containers.view",
+      "containers.create",
+      "containers.inspect",
+
+      // Transport
+      "transport.view",
+      "transport.create",
+      "transport.manage",
+      "transport.track",
+
+      // Loading
+      "loading.view",
+      "loading.create",
+      "loading.verify",
+
+      // Documents
+      "documents.view",
+      "documents.create",
+
+      // Inventory (read-only for allocations)
+      "inventory.view",
+
+      // Reports
+      "reports.view",
+      "reports.export",
+    ],
   },
 
-  // Loans
-  LOANS: {
-    VIEW: "loans.view",
-    CREATE: "loans.create",
-    UPDATE: "loans.update",
-    DELETE: "loans.delete",
-    APPROVE: "loans.approve",
-    DISBURSE: "loans.disburse",
+  FINANCE_OFFICER: {
+    label: "Finance Officer",
+    description: "Manages financial operations and reporting",
+    permissions: [
+      // Payments
+      "payments.view",
+      "payments.create",
+      "payments.approve",
+      "payments.process",
+
+      // Budget & Planning
+      "budget.view",
+      "budget.create",
+      "budget.approve",
+
+      // Reports
+      "reports.view",
+      "reports.export",
+      "reports.create",
+
+      // Trader Management (read-only)
+      "traders.view",
+
+      // Export Orders (read-only)
+      "export.view",
+
+      // Audit
+      "audit.view",
+    ],
   },
 
-  // Loan Products
-  LOAN_PRODUCTS: {
-    VIEW: "loan-products.view",
-    CREATE: "loan-products.create",
-    UPDATE: "loan-products.update",
-    DELETE: "loan-products.delete",
-  },
+  OPERATIONS_MANAGER: {
+    label: "Operations Manager",
+    description: "Oversees overall operations",
+    permissions: [
+      // All viewing permissions
+      "traders.view",
+      "buying.view",
+      "quality.view",
+      "inventory.view",
+      "drying.view",
+      "export.view",
+      "transport.view",
+      "containers.view",
+      "payments.view",
 
-  // Loan Requests
-  LOAN_REQUESTS: {
-    VIEW: "loan-requests.view",
-    APPROVE: "loan-requests.approve",
-    REJECT: "loan-requests.reject",
-  },
+      // Management capabilities
+      "buying.create",
+      "export.create",
+      "transport.create",
+      "buying.approve",
+      "export.approve",
 
-  // Repayments
-  REPAYMENTS: {
-    VIEW: "repayments.view",
-    CREATE: "repayments.create",
-    UPDATE: "repayments.update",
-    DELETE: "repayments.delete",
-  },
+      // Reports
+      "reports.view",
+      "reports.export",
+      "reports.create",
 
-  // Accounting
-  ACCOUNTING: {
-    VIEW: "accounting.view",
-    CREATE: "accounting.create",
-    UPDATE: "accounting.update",
-    DELETE: "accounting.delete",
-    JOURNAL_ENTRIES: "accounting.journal-entries",
-    REPORTS: "accounting.reports",
-  },
+      // Alerts
+      "alerts.view",
 
-  // Accounts
-  ACCOUNTS: {
-    VIEW: "accounts.view",
-    CREATE: "accounts.create",
-    UPDATE: "accounts.update",
-    DELETE: "accounts.delete",
-  },
-
-  // Staff
-  STAFF: {
-    VIEW: "staff.view",
-    CREATE: "staff.create",
-    UPDATE: "staff.update",
-    DELETE: "staff.delete",
-  },
-
-  // Roles & Permissions
-  ROLES: {
-    VIEW: "roles.view",
-    CREATE: "roles.create",
-    UPDATE: "roles.update",
-    DELETE: "roles.delete",
-  },
-
-  PERMISSIONS_MANAGE: "permissions.manage",
-
-  // Settings
-  SETTINGS: {
-    VIEW: "settings.view",
-    UPDATE: "settings.update",
-  },
-
-  // Reports
-  REPORTS: {
-    VIEW: "reports.view",
-    EXPORT: "reports.export",
-  },
-
-  // Notifications
-  NOTIFICATIONS: {
-    VIEW: "notifications.view",
-    MANAGE: "notifications.manage",
-  },
-
-  // Audit Logs
-  AUDIT_LOGS: {
-    VIEW: "audit-logs.view",
+      // Audit
+      "audit.view",
+    ],
   },
 } as const;
 
 // ============================================
-// ROLE CONSTANTS
+// TYPE DEFINITIONS
 // ============================================
 
-export const ROLES = {
-  ADMIN: "Admin",
-  MANAGER: "Manager",
-  LOAN_OFFICER: "Loan Officer",
-  AUDITOR: "Auditor",
-} as const;
+export type UserRole = keyof typeof ROLES_PERMISSIONS;
+export type Permission = string;
 
-// ============================================
-// PERMISSION GROUPS
-// ============================================
+export interface RolePermissions {
+  label: string;
+  description: string;
+  permissions: Permission[];
+}
 
-/**
- * Common permission groups for easier checking
- */
-export const PERMISSION_GROUPS = {
-  // Full CRUD operations
-  LOANS_FULL_ACCESS: [
-    PERMISSIONS.LOANS.VIEW,
-    PERMISSIONS.LOANS.CREATE,
-    PERMISSIONS.LOANS.UPDATE,
-    PERMISSIONS.LOANS.DELETE,
-    PERMISSIONS.LOANS.APPROVE,
-    PERMISSIONS.LOANS.DISBURSE,
-  ],
-
-  // Loan management (view, create, update)
-  LOANS_MANAGE: [
-    PERMISSIONS.LOANS.VIEW,
-    PERMISSIONS.LOANS.CREATE,
-    PERMISSIONS.LOANS.UPDATE,
-  ],
-
-  // View-only access
-  LOANS_VIEW_ONLY: [PERMISSIONS.LOANS.VIEW],
-
-  // Borrower management
-  BORROWERS_MANAGE: [
-    PERMISSIONS.BORROWERS.VIEW,
-    PERMISSIONS.BORROWERS.CREATE,
-    PERMISSIONS.BORROWERS.UPDATE,
-  ],
-
-  // Accounting access
-  ACCOUNTING_FULL: [
-    PERMISSIONS.ACCOUNTING.VIEW,
-    PERMISSIONS.ACCOUNTING.CREATE,
-    PERMISSIONS.ACCOUNTING.UPDATE,
-    PERMISSIONS.ACCOUNTING.DELETE,
-    PERMISSIONS.ACCOUNTING.JOURNAL_ENTRIES,
-    PERMISSIONS.ACCOUNTING.REPORTS,
-  ],
-
-  // Read-only accounting
-  ACCOUNTING_READ: [
-    PERMISSIONS.ACCOUNTING.VIEW,
-    PERMISSIONS.ACCOUNTING.REPORTS,
-  ],
-
-  // Admin operations
-  ADMIN_OPERATIONS: [
-    PERMISSIONS.INSTITUTIONS.VIEW,
-    PERMISSIONS.BRANCHES.VIEW,
-    PERMISSIONS.STAFF.VIEW,
-    PERMISSIONS.ROLES.VIEW,
-    PERMISSIONS.SETTINGS.VIEW,
-  ],
-} as const;
+export interface UserWithPermissions {
+  id: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  role: UserRole;
+  permissions: Permission[];
+  isActive: boolean;
+  createdAt: Date;
+}
 
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
 
 /**
- * Get all permissions as a flat array
+ * Get all permissions for a role
  */
-export function getAllPermissions(): string[] {
-  const permissions: string[] = [];
-
-  const extractPermissions = (obj: any) => {
-    for (const key in obj) {
-      if (typeof obj[key] === "string") {
-        permissions.push(obj[key]);
-      } else if (typeof obj[key] === "object") {
-        extractPermissions(obj[key]);
-      }
-    }
-  };
-
-  extractPermissions(PERMISSIONS);
-  return permissions;
+export function getRolePermissions(role: UserRole): Permission[] {
+  return [...(ROLES_PERMISSIONS[role]?.permissions ?? [])];
 }
 
 /**
- * Get permissions by category
+ * Get role label
  */
-export function getPermissionsByCategory(category: string): string[] {
-  const categoryKey = category.toUpperCase().replace(/-/g, "_");
-  const categoryPermissions = (PERMISSIONS as any)[categoryKey];
-
-  if (!categoryPermissions) {
-    return [];
-  }
-
-  return Object.values(categoryPermissions).filter(
-    (value) => typeof value === "string"
-  ) as string[];
+export function getRoleLabel(role: UserRole): string {
+  return ROLES_PERMISSIONS[role]?.label || role;
 }
 
 /**
- * Check if a permission string is valid
+ * Get role description
  */
-export function isValidPermission(permission: string): boolean {
-  const allPermissions = getAllPermissions();
-  return allPermissions.includes(permission);
+export function getRoleDescription(role: UserRole): string {
+  return ROLES_PERMISSIONS[role]?.description || "";
 }
 
 /**
- * Get human-readable permission name
+ * Check if user has specific permission
  */
-export function getPermissionLabel(permission: string): string {
-  const parts = permission.split(".");
-  if (parts.length !== 2) return permission;
-
-  const [category, action] = parts;
-  const categoryLabel = category
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-  const actionLabel = action.charAt(0).toUpperCase() + action.slice(1);
-
-  return `${categoryLabel} - ${actionLabel}`;
+export function hasPermission(
+  userPermissions: Permission[],
+  requiredPermission: Permission
+): boolean {
+  return userPermissions.includes(requiredPermission);
 }
 
 /**
- * Get all permissions grouped by category
+ * Check if user has ANY of the permissions
  */
-export function getPermissionsGrouped(): Record<string, string[]> {
-  const grouped: Record<string, string[]> = {};
+export function hasAnyPermission(
+  userPermissions: Permission[],
+  requiredPermissions: Permission[]
+): boolean {
+  return requiredPermissions.some((perm) => userPermissions.includes(perm));
+}
 
-  const allPermissions = getAllPermissions();
-  allPermissions.forEach((permission) => {
+/**
+ * Check if user has ALL permissions
+ */
+export function hasAllPermissions(
+  userPermissions: Permission[],
+  requiredPermissions: Permission[]
+): boolean {
+  return requiredPermissions.every((perm) => userPermissions.includes(perm));
+}
+
+/**
+ * Get all available roles
+ */
+export function getAllRoles(): Array<{ role: UserRole; label: string }> {
+  return Object.entries(ROLES_PERMISSIONS).map(([role, data]) => ({
+    role: role as UserRole,
+    label: data.label,
+  }));
+}
+
+/**
+ * Get all unique permissions across all roles
+ */
+export function getAllPermissions(): Permission[] {
+  const permSet = new Set<Permission>();
+  Object.values(ROLES_PERMISSIONS).forEach((roleData) => {
+    roleData.permissions.forEach((perm) => permSet.add(perm));
+  });
+  return Array.from(permSet).sort();
+}
+
+/**
+ * Format permission for display
+ */
+export function formatPermissionLabel(permission: Permission): string {
+  return permission
+    .split(".")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" - ");
+}
+
+/**
+ * Get permissions grouped by category
+ */
+export function getPermissionsGrouped(): Record<string, Permission[]> {
+  const grouped: Record<string, Permission[]> = {};
+
+  getAllPermissions().forEach((permission) => {
     const [category] = permission.split(".");
     if (!grouped[category]) {
       grouped[category] = [];
@@ -284,58 +371,3 @@ export function getPermissionsGrouped(): Record<string, string[]> {
 
   return grouped;
 }
-
-/**
- * Check if user has permission to perform CRUD operation
- */
-export function canPerformCRUD(
-  userPermissions: string[],
-  resource: string,
-  operation: "create" | "view" | "update" | "delete"
-): boolean {
-  const permission = `${resource}.${operation}`;
-  return userPermissions.includes(permission);
-}
-
-/**
- * Get missing permissions from required set
- */
-export function getMissingPermissions(
-  userPermissions: string[],
-  requiredPermissions: string[]
-): string[] {
-  return requiredPermissions.filter((perm) => !userPermissions.includes(perm));
-}
-
-/**
- * Format permissions for display in UI
- */
-export function formatPermissionsForDisplay(
-  permissions: string[]
-): Array<{ category: string; action: string; label: string }> {
-  return permissions.map((permission) => {
-    const [category, action] = permission.split(".");
-    return {
-      category,
-      action,
-      label: getPermissionLabel(permission),
-    };
-  });
-}
-
-// ============================================
-// TYPE EXPORTS
-// ============================================
-
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
-export type Role = (typeof ROLES)[keyof typeof ROLES];
-export type PermissionString = string;
-
-// Helper type to extract all permission values
-type ExtractPermissions<T> = T extends string
-  ? T
-  : T extends object
-  ? ExtractPermissions<T[keyof T]>
-  : never;
-
-export type AllPermissions = ExtractPermissions<typeof PERMISSIONS>;

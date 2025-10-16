@@ -67,7 +67,7 @@ export const navigationConfig: NavigationItem[] = [
       },
       {
         title: "Traders",
-        url: "/dashboard/procurement/traders",
+        url: "/dashboard/traders",
         roles: [UserRole.PROCUREMENT_QUALITY_MANAGER, UserRole.SYSTEM_ADMIN],
       },
       {

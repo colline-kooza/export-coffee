@@ -1,201 +1,86 @@
 "server only";
 import db from "@/prisma/db";
-import { cookies } from "next/headers";
-
+import { auth } from "@/lib/auth";
 import { cache } from "react";
+import { ROLES_PERMISSIONS, type UserRole } from "@/lib/permissions";
 
-export interface BranchSession {
-  branchId: string;
-  branchName: string;
-  institutionId: string;
-  institutionName: string;
-  staffId: string;
-  role: string;
-  userId: string;
-}
-
-export interface StaffWithRelations {
+export interface UserWithPermissions {
   id: string;
-  userId: string;
-  roleId: string;
-  branchId: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  role: UserRole;
+  permissions: string[];
   isActive: boolean;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-  };
-  role: {
-    id: string;
-    name: string;
-    description: string | null;
-    permissions: {
-      permission: {
-        id: string;
-        name: string;
-        category: string;
-        action: string;
-      };
-    }[];
-  };
-  branch: {
-    id: string;
-    name: string;
-    location: string | null;
-    isActive: boolean;
-    institution: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  };
+  createdAt: Date;
 }
 
 /**
- * Get branch session from cookie
- * Server-side only - use cache for deduplication within single request
+ * Get current authenticated user with permissions
+ * Server-side only - cached per request
  */
-export const getBranchSession = cache(
-  async (): Promise<BranchSession | null> => {
+export const getCurrentUser = cache(
+  async (): Promise<UserWithPermissions | null> => {
     try {
-      const cookieStore = await cookies();
-      const sessionCookie = cookieStore.get("branch-session");
+      const session = await auth.api.getSession({
+        headers: await import("next/headers").then((mod) => mod.headers()),
+      });
 
-      if (!sessionCookie || !sessionCookie.value) {
+      if (!session || !session.user) {
         return null;
       }
 
-      const session: BranchSession = JSON.parse(sessionCookie.value);
-      return session;
-    } catch (error) {
-      console.error("Error getting branch session:", error);
-      return null;
-    }
-  }
-);
-
-/**
- * Get current staff details with all relations
- * Cached per request for performance
- */
-export const getCurrentStaff = cache(
-  async (): Promise<StaffWithRelations | null> => {
-    try {
-      const session = await getBranchSession();
-      if (!session) {
-        return null;
-      }
-
-      const staff = await db.staff.findUnique({
+      const user = await db.user.findUnique({
         where: {
-          id: session.staffId,
+          id: session.user.id,
         },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          },
-          role: {
-            include: {
-              permissions: {
-                include: {
-                  permission: {
-                    select: {
-                      id: true,
-                      name: true,
-                      category: true,
-                      action: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          branch: {
-            include: {
-              institution: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
-              },
-            },
-          },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
         },
       });
 
-      if (!staff || !staff.isActive) {
+      if (!user || !user.isActive) {
         return null;
       }
 
-      return staff;
+      // Get permissions based on role
+      const permissions = ROLES_PERMISSIONS[user.role]?.permissions || [];
+
+      return {
+        ...user,
+        permissions,
+      };
     } catch (error) {
-      console.error("Error getting current staff:", error);
+      console.error("Error getting current user:", error);
       return null;
     }
   }
 );
 
 /**
- * Get all branches accessible by current user
+ * Get user permissions array
  * Cached per request
  */
-export const getUserBranches = cache(async () => {
+export const getUserPermissions = cache(async (): Promise<string[]> => {
   try {
-    const session = await getBranchSession();
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return [];
     }
 
-    const branches = await db.staff.findMany({
-      where: {
-        userId: session.userId,
-        isActive: true,
-        branch: {
-          isActive: true,
-        },
-      },
-      include: {
-        branch: {
-          include: {
-            institution: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        role: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return branches.map((staff) => ({
-      branchId: staff.branch.id,
-      branchName: staff.branch.name,
-      branchLocation: staff.branch.location,
-      institutionId: staff.branch.institution.id,
-      institutionName: staff.branch.institution.name,
-      staffId: staff.id,
-      role: staff.role.name,
-      isActive: staff.branch.isActive,
-    }));
+    return user.permissions;
   } catch (error) {
-    console.error("Error getting user branches:", error);
+    console.error("Error getting user permissions:", error);
     return [];
   }
 });
@@ -207,17 +92,8 @@ export const getUserBranches = cache(async () => {
 export const hasPermission = cache(
   async (permissionName: string): Promise<boolean> => {
     try {
-      const staff = await getCurrentStaff();
-      if (!staff) {
-        return false;
-      }
-
-      // Check if user's role has the permission
-      const hasAccess = staff.role.permissions.some(
-        (rp) => rp.permission.name === permissionName
-      );
-
-      return hasAccess;
+      const permissions = await getUserPermissions();
+      return permissions.includes(permissionName);
     } catch (error) {
       console.error("Error checking permission:", error);
       return false;
@@ -231,16 +107,8 @@ export const hasPermission = cache(
 export const hasAnyPermission = cache(
   async (permissionNames: string[]): Promise<boolean> => {
     try {
-      const staff = await getCurrentStaff();
-      if (!staff) {
-        return false;
-      }
-
-      const hasAccess = staff.role.permissions.some((rp) =>
-        permissionNames.includes(rp.permission.name)
-      );
-
-      return hasAccess;
+      const permissions = await getUserPermissions();
+      return permissionNames.some((perm) => permissions.includes(perm));
     } catch (error) {
       console.error("Error checking permissions:", error);
       return false;
@@ -254,19 +122,8 @@ export const hasAnyPermission = cache(
 export const hasAllPermissions = cache(
   async (permissionNames: string[]): Promise<boolean> => {
     try {
-      const staff = await getCurrentStaff();
-      if (!staff) {
-        return false;
-      }
-
-      const userPermissions = staff.role.permissions.map(
-        (rp) => rp.permission.name
-      );
-      const hasAll = permissionNames.every((perm) =>
-        userPermissions.includes(perm)
-      );
-
-      return hasAll;
+      const permissions = await getUserPermissions();
+      return permissionNames.every((perm) => permissions.includes(perm));
     } catch (error) {
       console.error("Error checking permissions:", error);
       return false;
@@ -275,34 +132,16 @@ export const hasAllPermissions = cache(
 );
 
 /**
- * Get all permissions for current user
- * Returns array of permission names
+ * Check if current user is System Admin
  */
-export const getUserPermissions = cache(async (): Promise<string[]> => {
+export const isSystemAdmin = cache(async (): Promise<boolean> => {
   try {
-    const staff = await getCurrentStaff();
-    if (!staff) {
-      return [];
-    }
-
-    return staff.role.permissions.map((rp) => rp.permission.name);
-  } catch (error) {
-    console.error("Error getting user permissions:", error);
-    return [];
-  }
-});
-
-/**
- * Check if current user is Admin
- */
-export const isAdmin = cache(async (): Promise<boolean> => {
-  try {
-    const staff = await getCurrentStaff();
-    if (!staff) {
+    const user = await getCurrentUser();
+    if (!user) {
       return false;
     }
 
-    return staff.role.name === "Admin";
+    return user.role === "SYSTEM_ADMIN";
   } catch (error) {
     console.error("Error checking admin status:", error);
     return false;
@@ -312,14 +151,14 @@ export const isAdmin = cache(async (): Promise<boolean> => {
 /**
  * Check if current user has a specific role
  */
-export const hasRole = cache(async (roleName: string): Promise<boolean> => {
+export const hasRole = cache(async (roleName: UserRole): Promise<boolean> => {
   try {
-    const staff = await getCurrentStaff();
-    if (!staff) {
+    const user = await getCurrentUser();
+    if (!user) {
       return false;
     }
 
-    return staff.role.name === roleName;
+    return user.role === roleName;
   } catch (error) {
     console.error("Error checking role:", error);
     return false;
@@ -330,17 +169,62 @@ export const hasRole = cache(async (roleName: string): Promise<boolean> => {
  * Check if current user has any of the specified roles
  */
 export const hasAnyRole = cache(
-  async (roleNames: string[]): Promise<boolean> => {
+  async (roleNames: UserRole[]): Promise<boolean> => {
     try {
-      const staff = await getCurrentStaff();
-      if (!staff) {
+      const user = await getCurrentUser();
+      if (!user) {
         return false;
       }
 
-      return roleNames.includes(staff.role.name);
+      return roleNames.includes(user.role);
     } catch (error) {
       console.error("Error checking roles:", error);
       return false;
     }
   }
 );
+
+/**
+ * Require authentication - throws if not authenticated
+ */
+export async function requireAuth(): Promise<UserWithPermissions> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+  return user;
+}
+
+/**
+ * Require specific permission - throws if not authorized
+ */
+export async function requirePermission(permissionName: string): Promise<void> {
+  const hasAccess = await hasPermission(permissionName);
+  if (!hasAccess) {
+    throw new Error(`Unauthorized: Missing permission '${permissionName}'`);
+  }
+}
+
+/**
+ * Require any of the specified permissions - throws if not authorized
+ */
+export async function requireAnyPermission(
+  permissionNames: string[]
+): Promise<void> {
+  const hasAccess = await hasAnyPermission(permissionNames);
+  if (!hasAccess) {
+    throw new Error(
+      `Unauthorized: Missing required permissions: ${permissionNames.join(", ")}`
+    );
+  }
+}
+
+/**
+ * Require specific role - throws if not authorized
+ */
+export async function requireRole(roleName: UserRole): Promise<void> {
+  const hasAccess = await hasRole(roleName);
+  if (!hasAccess) {
+    throw new Error(`Unauthorized: Required role '${roleName}'`);
+  }
+}

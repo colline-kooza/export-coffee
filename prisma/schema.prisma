@@ -31,18 +31,20 @@ enum PermissionAction {
 }
 
 model User {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  password    String
-  firstName   String
-  lastName    String
-  name        String
-  phoneNumber String?
-  role        UserRole
-  isActive    Boolean   @default(true)
-  lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?
+  firstName     String
+  lastName      String
+  name          String
+  phone         String?
+  image         String?
+  emailVerified Boolean   @default(false) // Add this line
+  role          UserRole
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // Relationships
   permissions                Permission[]
@@ -69,11 +71,58 @@ model User {
   approvedQualityInspections QualityInspection[]     @relation("ApprovedBy")
   verifiedLoadingTallies     LoadingTally[]          @relation("VerifiedBy")
   acknowledgedAlerts         SystemAlert[]           @relation("AcknowledgedBy")
+  Account                    Account[]
+  Session                    Session[]
 
   @@index([email])
   @@index([role])
   @@index([isActive])
-  @@map("users")
+  @@map("user") // Changed from "users" to "user" to match Better Auth
+}
+
+model Account {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId    String
+  providerId   String
+  accessToken  String?   @db.Text
+  refreshToken String?   @db.Text
+  idToken      String?   @db.Text
+  expiresAt    DateTime?
+  password     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account") // Changed from "accounts" to "account"
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("session") // Changed from "sessions" to "session"
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+  @@map("verification") // Changed from "verification_tokens" to "verification"
 }
 
 model Permission {
