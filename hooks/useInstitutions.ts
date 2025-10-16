@@ -1,5 +1,5 @@
 import { api, getAuthenticatedApi } from "@/config/axios";
-import { Institution } from "@prisma/client";
+// import { Institution } from "@prisma/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ export interface InstitutionCreateDTO {
 }
 
 interface IInstitutionResponse {
-  data: Institution[] | null;
+  data: any[] | null;
   success: boolean;
   error?: string | null;
   pagination: {

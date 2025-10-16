@@ -58,7 +58,7 @@ export const getCurrentUser = cache(
 
       return {
         ...user,
-        permissions,
+        permissions: [...permissions],
       };
     } catch (error) {
       console.error("Error getting current user:", error);

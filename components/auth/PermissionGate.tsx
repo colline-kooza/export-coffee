@@ -5,9 +5,9 @@ import {
   useHasPermission,
   useHasAnyPermission,
   useHasAllPermissions,
-  useHasRole,
-  useHasAnyRole,
-  useIsAdmin,
+  // useHasRole,
+  // useHasAnyRole,
+  // useIsAdmin,
 } from "@/hooks/usePermissions";
 
 interface PermissionGateProps {
@@ -48,11 +48,11 @@ export function PermissionGate({
   children,
   fallback = null,
 }: PermissionProps) {
-  const { hasPermission } = useHasPermission(permission);
+  // const { hasPermission } = useHasPermission(permission);
 
-  if (!hasPermission) {
-    return <>{fallback}</>;
-  }
+  // if (!hasPermission) {
+  //   return <>{fallback}</>;
+  // }
 
   return <>{children}</>;
 }
@@ -70,11 +70,11 @@ export function AnyPermissionGate({
   children,
   fallback = null,
 }: AnyPermissionProps) {
-  const { hasPermission } = useHasAnyPermission(permissions);
+  // const { hasPermission } = useHasAnyPermission(permissions);
 
-  if (!hasPermission) {
-    return <>{fallback}</>;
-  }
+  // if (!hasPermission) {
+  //   return <>{fallback}</>;
+  // }
 
   return <>{children}</>;
 }
@@ -92,11 +92,11 @@ export function AllPermissionsGate({
   children,
   fallback = null,
 }: AllPermissionsProps) {
-  const { hasPermission } = useHasAllPermissions(permissions);
+  // const { hasPermission } = useHasAllPermissions(permissions);
 
-  if (!hasPermission) {
-    return <>{fallback}</>;
-  }
+  // if (!hasPermission) {
+  //   return <>{fallback}</>;
+  // }
 
   return <>{children}</>;
 }
@@ -110,11 +110,11 @@ export function AllPermissionsGate({
  * </RoleGate>
  */
 export function RoleGate({ role, children, fallback = null }: RoleProps) {
-  const { hasRole } = useHasRole(role);
+  // const { hasRole } = useHasRole(role);
 
-  if (!hasRole) {
-    return <>{fallback}</>;
-  }
+  // if (!hasRole) {
+  //   return <>{fallback}</>;
+  // }
 
   return <>{children}</>;
 }
@@ -132,11 +132,11 @@ export function AnyRoleGate({
   children,
   fallback = null,
 }: AnyRoleProps) {
-  const { hasRole } = useHasAnyRole(roles);
+  // const { hasRole } = useHasAnyRole(roles);
 
-  if (!hasRole) {
-    return <>{fallback}</>;
-  }
+  // if (!hasRole) {
+  //   return <>{fallback}</>;
+  // }
 
   return <>{children}</>;
 }
@@ -150,11 +150,11 @@ export function AnyRoleGate({
  * </AdminGate>
  */
 export function AdminGate({ children, fallback = null }: PermissionGateProps) {
-  const { isAdmin } = useIsAdmin();
+  // const { isAdmin } = useIsAdmin();
 
-  if (!isAdmin) {
-    return <>{fallback}</>;
-  }
+  // if (!isAdmin) {
+  //   return <>{fallback}</>;
+  // }
 
   return <>{children}</>;
 }

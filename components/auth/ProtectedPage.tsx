@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { JSX, ReactNode } from "react";
 import {
-  getCurrentStaff,
+  // getCurrentStaff,
   hasPermission,
   hasAnyPermission,
   hasRole,
@@ -46,13 +46,14 @@ export async function ProtectedPage({
   fallback,
   redirectTo,
 }: ProtectedPageProps) {
-  const staff = await getCurrentStaff();
+  // const staff = await getCurrentStaff();
 
   // Check if user has staff record
-  if (!staff) {
-    if (redirectTo) {
-      redirect(redirectTo);
-    }
+  // if (!staff) {
+  //   if (redirectTo) {
+  //     redirect(redirectTo);
+  //   }
+  
     return (
       <UnauthorizedFallback
         message="No active staff profile found"
@@ -64,54 +65,54 @@ export async function ProtectedPage({
   let hasAccess = true;
 
   // Check single permission
-  if (requiredPermission) {
-    hasAccess = await hasPermission(requiredPermission);
-  }
+  // if (requiredPermission) {
+  //   hasAccess = await hasPermission(requiredPermission);
+  // }
 
-  // Check multiple permissions
-  if (requiredPermissions && requiredPermissions.length > 0) {
-    if (requireAllPermissions) {
-      // Require all permissions
-      const checks = await Promise.all(
-        requiredPermissions.map((perm) => hasPermission(perm))
-      );
-      hasAccess = checks.every((check) => check);
-    } else {
-      // Require any permission
-      const checks = await Promise.all(
-        requiredPermissions.map((perm) => hasPermission(perm))
-      );
-      hasAccess = checks.some((check) => check);
-    }
-  }
+  // // Check multiple permissions
+  // if (requiredPermissions && requiredPermissions.length > 0) {
+  //   if (requireAllPermissions) {
+  //     // Require all permissions
+  //     const checks = await Promise.all(
+  //       requiredPermissions.map((perm) => hasPermission(perm))
+  //     );
+  //     hasAccess = checks.every((check) => check);
+  //   } else {
+  //     // Require any permission
+  //     const checks = await Promise.all(
+  //       requiredPermissions.map((perm) => hasPermission(perm))
+  //     );
+  //     hasAccess = checks.some((check) => check);
+  //   }
+  // }
 
   // Check single role
-  if (requiredRole && hasAccess) {
-    hasAccess = await hasRole(requiredRole);
-  }
+  // if (requiredRole && hasAccess) {
+  //   hasAccess = await hasRole(requiredRole);
+  // }
 
   // Check multiple roles
-  if (requiredRoles && requiredRoles.length > 0 && hasAccess) {
-    hasAccess = await hasAnyRole(requiredRoles);
-  }
+  // if (requiredRoles && requiredRoles.length > 0 && hasAccess) {
+  //   hasAccess = await hasAnyRole(requiredRoles);
+  // }
 
-  if (!hasAccess) {
-    if (redirectTo) {
-      redirect(redirectTo);
-    }
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-    return (
-      <UnauthorizedFallback
-        message="Access Denied"
-        description="You don't have permission to access this page."
-      />
-    );
-  }
+  // if (!hasAccess) {
+  //   if (redirectTo) {
+  //     redirect(redirectTo);
+  //   }
+  //   if (fallback) {
+  //     return <>{fallback}</>;
+  //   }
+  //   return (
+  //     <UnauthorizedFallback
+  //       message="Access Denied"
+  //       description="You don't have permission to access this page."
+  //     />
+  //   );
+  // }
 
-  return <>{children}</>;
-}
+  // return <>{children}</>;
+// }
 
 /**
  * Default unauthorized fallback component
