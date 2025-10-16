@@ -74,48 +74,6 @@ export async function POST(req: Request) {
       count + 1
     ).padStart(3, "0")}`;
 
-    // const trader = await db.trader.create({
-    //   data: {
-    //     ...data,
-    //     traderCode,
-    //     status: "ACTIVE",
-    //     trustScore: 50,
-    //     reliabilityScore: 50,
-    //     totalDeliveries: 0,
-    //     totalVolumeKg: 0,
-    //     qualityAcceptanceRate: 0,
-    //     preferredPaymentDays: 1,
-    //     performance: {
-    //       create: {
-    //         totalDeliveries: 0,
-    //         totalVolumeKg: 0,
-    //         acceptedDeliveries: 0,
-    //         rejectedDeliveries: 0,
-    //         borderlineDeliveries: 0,
-    //         qualityConsistencyScore: 50,
-    //         averageDefectCount: 0,
-    //         averageMoistureContent: 0,
-    //         onTimeDeliveryRate: 100,
-    //       },
-    //     },
-    //     paymentTerms: {
-    //       create: {
-    //         paymentDays: data.paymentDays || 1,
-    //         preferredMethod: data.preferredMethod || "BANK_TRANSFER",
-    //         bankName: data.bankName,
-    //         accountNumber: data.accountNumber,
-    //         accountName: data.accountName,
-    //         mobileMoneyNumber: data.mobileMoneyNumber,
-    //         mobileMoneyName: data.mobileMoneyName,
-    //         requiresAdvance: data.requiresAdvance || false,
-    //       },
-    //     },
-    //   },
-    //   include: {
-    //     performance: true,
-    //     paymentTerms: true,
-    //   },
-    // });
 
     const trader = await db.trader.create({
       data: {

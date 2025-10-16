@@ -102,39 +102,6 @@ export interface TraderDashboardMetrics {
   monthlyVolume: Record<string, number>;
 }
 
-// Get all traders with pagination and filters
-// export function useTraders(params?: {
-//   search?: string;
-//   status?: string;
-//   page?: number;
-//   limit?: number;
-// }) {
-//   const queryParams = new URLSearchParams();
-//   if (params?.search) queryParams.set("search", params.search);
-//   if (params?.status) queryParams.set("status", params.status);
-//   if (params?.page) queryParams.set("page", params.page.toString());
-//   if (params?.limit) queryParams.set("limit", params.limit.toString());
-
-//   return useQuery({
-//     queryKey: ["traders", params],
-//     queryFn: async () => {
-//       const response = await fetch(
-//         `${baseUrl}/api/traders?${queryParams.toString()}`
-//       );
-//       if (!response.ok) {
-//         throw new Error("Failed to fetch traders");
-//       }
-//       const data = await response.json();
-//       return data as {
-//         traders: TraderProps[];
-//         totalCount: number;
-//         totalPages: number;
-//         currentPage: number;
-//       };
-//     },
-//   });
-// }
-
 // Get single trader details
 export function useTrader(traderId: string) {
   return useQuery({
@@ -167,51 +134,6 @@ export function useTraderDashboard(traderId: string, range: string = "30days") {
     enabled: !!traderId,
   });
 }
-
-// // Create trader mutation
-// export function useCreateTrader() {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationFn: async (data: Partial<TraderProps>) => {
-//       const response = await fetch(`${baseUrl}/api/traders`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(data),
-//       });
-//       if (!response.ok) {
-//         throw new Error("Failed to create trader");
-//       }
-//       return await response.json();
-//     },
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ["traders"] });
-//     },
-//   });
-// }
-
-// // Update trader mutation
-// export function useUpdateTrader(traderId: string) {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationFn: async (data: Partial<TraderProps>) => {
-//       const response = await fetch(`${baseUrl}/api/traders/${traderId}`, {
-//         method: "PATCH",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(data),
-//       });
-//       if (!response.ok) {
-//         throw new Error("Failed to update trader");
-//       }
-//       return await response.json();
-//     },
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ["trader", traderId] });
-//       queryClient.invalidateQueries({ queryKey: ["traders"] });
-//     },
-//   });
-// }
 
 // Delete (deactivate) trader mutation
 export function useDeleteTrader() {

@@ -7,7 +7,7 @@ export async function GET() {
     const users = await db.user.findMany({
       orderBy: { createdAt: "desc" },
       where: {
-        role: "SYSTEM_ADMIN",
+        role: "USER",
       },
     });
     return new Response(JSON.stringify(users), {

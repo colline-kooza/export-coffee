@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useState, useMemo } from "react";
+import { useState, useMemo } from "react"
 import {
   type ColumnDef,
   flexRender,
@@ -9,53 +9,35 @@ import {
   getSortedRowModel,
   type SortingState,
   getFilteredRowModel,
-} from "@tanstack/react-table";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  AlertCircle,
-  RefreshCw,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Grid3X3,
-  MoreHorizontal,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import type {
-  DataTableConfig,
-  FilterState,
-  ViewMode,
-} from "@/types/data-table";
-import { StatusBadge } from "./StatusBadge";
-import { DataTableHeader } from "./DataTableHeader";
+} from "@tanstack/react-table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent } from "@/components/ui/card"
+import { AlertCircle, RefreshCw, ArrowUpDown, ChevronLeft, ChevronRight, Grid3X3, MoreHorizontal } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { DataTableConfig, FilterState, ViewMode } from "@/types/data-table"
+import { DataTableHeader } from "./DataTableHeader"
+import { StatusBadge } from "./StatusBadge"
+
 
 interface EnhancedDataTableProps<T> extends DataTableConfig<T> {
-  className?: string;
-  title?: string;
-  subtitle?: string;
-  currentPage?: number;
-  totalPages?: number;
-  onPageChange?: (page: number) => void;
-  enableSelection?: boolean;
-  showActions?: boolean;
-  actionsColumnWidth?: string;
-  filterState?: FilterState;
-  onFilterChange?: (filterId: string, value: string) => void;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  maxVisibleColumns?: number; // New prop to control column visibility
-  priorityColumns?: string[]; // New prop to specify which columns should always be visible
+  className?: string
+  title?: string
+  subtitle?: string
+  currentPage?: number
+  totalPages?: number
+  onPageChange?: (page: number) => void
+  enableSelection?: boolean
+  showActions?: boolean
+  actionsColumnWidth?: string
+  filterState?: FilterState
+  onFilterChange?: (filterId: string, value: string) => void
+  searchValue?: string
+  onSearchChange?: (value: string) => void
+  maxVisibleColumns?: number // New prop to control column visibility
+  priorityColumns?: string[] // New prop to specify which columns should always be visible
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -88,55 +70,46 @@ export function DataTable<T extends Record<string, any>>({
   maxVisibleColumns = 6,
   priorityColumns = [],
 }: EnhancedDataTableProps<T>) {
-  const [viewMode, setViewMode] = useState<ViewMode>("table");
-  const [internalGlobalFilter, setInternalGlobalFilter] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState({});
-  const [internalFilterState, setInternalFilterState] = useState<FilterState>(
-    {}
-  );
-  const [showAllColumns, setShowAllColumns] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("table")
+  const [internalGlobalFilter, setInternalGlobalFilter] = useState("")
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [rowSelection, setRowSelection] = useState({})
+  const [internalFilterState, setInternalFilterState] = useState<FilterState>({})
+  const [showAllColumns, setShowAllColumns] = useState(false)
 
   // Use external state if provided, otherwise use internal state
-  const globalFilter =
-    externalSearchValue !== undefined
-      ? externalSearchValue
-      : internalGlobalFilter;
-  const setGlobalFilter = externalOnSearchChange || setInternalGlobalFilter;
-  const filterState = externalFilterState || internalFilterState;
+  const globalFilter = externalSearchValue !== undefined ? externalSearchValue : internalGlobalFilter
+  const setGlobalFilter = externalOnSearchChange || setInternalGlobalFilter
+  const filterState = externalFilterState || internalFilterState
   const setFilterState = externalOnFilterChange
-    ? (filterId: string, value: string) =>
-        externalOnFilterChange(filterId, value)
-    : (filterId: string, value: string) =>
-        setInternalFilterState((prev) => ({ ...prev, [filterId]: value }));
+    ? (filterId: string, value: string) => externalOnFilterChange(filterId, value)
+    : (filterId: string, value: string) => setInternalFilterState((prev) => ({ ...prev, [filterId]: value }))
 
   // Calculate active filters count
   const activeFiltersCount = useMemo(() => {
-    return Object.values(filterState).filter(
-      (value) => value && value !== "all"
-    ).length;
-  }, [filterState]);
+    return Object.values(filterState).filter((value) => value && value !== "all").length
+  }, [filterState])
 
   // Determine which columns to show based on screen space and priorities
   const visibleColumns = useMemo(() => {
     if (showAllColumns || columns.length <= maxVisibleColumns) {
-      return columns;
+      return columns
     }
 
     // Sort columns by priority (priority columns first, then others)
-    const prioritySet = new Set(priorityColumns);
+    const prioritySet = new Set(priorityColumns)
     const sorted = [...columns].sort((a, b) => {
-      const aPriority = prioritySet.has(a.id) ? 1 : 0;
-      const bPriority = prioritySet.has(b.id) ? 1 : 0;
-      return bPriority - aPriority;
-    });
+      const aPriority = prioritySet.has(a.id) ? 1 : 0
+      const bPriority = prioritySet.has(b.id) ? 1 : 0
+      return bPriority - aPriority
+    })
 
-    return sorted.slice(0, maxVisibleColumns);
-  }, [columns, maxVisibleColumns, priorityColumns, showAllColumns]);
+    return sorted.slice(0, maxVisibleColumns)
+  }, [columns, maxVisibleColumns, priorityColumns, showAllColumns])
 
   // Create table columns with selection and actions
   const tableColumns = useMemo<ColumnDef<T>[]>(() => {
-    const cols: ColumnDef<T>[] = [];
+    const cols: ColumnDef<T>[] = []
 
     // Add selection column if enabled
     if (enableSelection) {
@@ -146,9 +119,7 @@ export function DataTable<T extends Record<string, any>>({
           <div className="flex items-center justify-center">
             <Checkbox
               checked={table.getIsAllPageRowsSelected()}
-              onCheckedChange={(value) =>
-                table.toggleAllPageRowsSelected(!!value)
-              }
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
               aria-label="Select all"
               className="border-2 border-gray-300 data-[state=checked]:bg-primary data-[state=checked]:border-purple-600 data-[state=checked]:text-white w-4 h-4"
             />
@@ -169,7 +140,7 @@ export function DataTable<T extends Record<string, any>>({
         size: 50,
         minSize: 50,
         maxSize: 50,
-      });
+      })
     }
 
     // Add custom columns with responsive sizing
@@ -187,32 +158,25 @@ export function DataTable<T extends Record<string, any>>({
               <span className="truncate flex-1 text-left">{column.header}</span>
               <ArrowUpDown className="ml-2 h-4 w-4 text-gray-400 flex-shrink-0" />
             </Button>
-          );
+          )
         },
         cell: ({ row, getValue }) => {
-          const value = getValue();
+          const value = getValue()
           if (column.cell) {
-            return (
-              <div className="min-w-0 flex-1">
-                {column.cell(value, row.original)}
-              </div>
-            );
+            return <div className="min-w-0 flex-1">{column.cell(value, row.original)}</div>
           }
           return (
-            <span
-              className="text-gray-800 font-medium truncate block"
-              title={value != null ? String(value) : "—"}
-            >
+            <span className="text-gray-800 font-medium truncate block" title={value != null ? String(value) : "—"}>
               {value != null ? String(value) : "—"}
             </span>
-          );
+          )
         },
         enableSorting: column.sortable !== false,
         size: column.width || (150 as any),
         minSize: 100,
         maxSize: 300,
-      });
-    });
+      })
+    })
 
     // Add collapsed columns indicator if some columns are hidden
     if (!showAllColumns && columns.length > maxVisibleColumns) {
@@ -229,7 +193,7 @@ export function DataTable<T extends Record<string, any>>({
           </Button>
         ),
         cell: ({ row }) => {
-          const hiddenColumns = columns.slice(maxVisibleColumns);
+          const hiddenColumns = columns.slice(maxVisibleColumns)
           return (
             <div className="flex items-center gap-1">
               <Button
@@ -241,22 +205,20 @@ export function DataTable<T extends Record<string, any>>({
                 +{hiddenColumns.length}
               </Button>
             </div>
-          );
+          )
         },
         enableSorting: false,
         size: 60,
         minSize: 60,
         maxSize: 60,
-      });
+      })
     }
 
     // Add actions column if actions exist and showActions is true
     if (showActions && actions.length > 0) {
       cols.push({
         id: "actions",
-        header: () => (
-          <div className="text-center text-gray-600 font-semibold">Actions</div>
-        ),
+        header: () => <div className="text-center text-gray-600 font-semibold">Actions</div>,
         cell: ({ row }) => (
           <div className="flex items-center justify-center gap-1">
             {actions.map((action, index) => (
@@ -270,16 +232,14 @@ export function DataTable<T extends Record<string, any>>({
                   action.variant === "destructive"
                     ? "w-8 p-0 rounded-md hover:bg-red-50 hover:text-red-600 text-red-600"
                     : "rounded bg-primary/80 hover:bg-purple-700 text-white cursor-pointer font-medium",
-                  action.className
+                  action.className,
                 )}
               >
                 {action.icon}
                 {action.variant !== "destructive" && actions.length === 1 && (
                   <span className="ml-1 hidden sm:inline">{action.label}</span>
                 )}
-                {action.variant === "destructive" && (
-                  <span className="sr-only">{action.label}</span>
-                )}
+                {action.variant === "destructive" && <span className="sr-only">{action.label}</span>}
               </Button>
             ))}
           </div>
@@ -288,10 +248,10 @@ export function DataTable<T extends Record<string, any>>({
         size: Number.parseInt(actionsColumnWidth),
         minSize: 80,
         maxSize: 120,
-      });
+      })
     }
 
-    return cols;
+    return cols
   }, [
     visibleColumns,
     actions,
@@ -301,27 +261,27 @@ export function DataTable<T extends Record<string, any>>({
     maxVisibleColumns,
     columns.length,
     showAllColumns,
-  ]);
+  ])
 
   // Filter data based on filter state
   const filteredData = useMemo(() => {
-    let filtered = data;
+    let filtered = data
 
     // Apply custom filters
     Object.entries(filterState).forEach(([filterId, filterValue]) => {
       if (filterValue && filterValue !== "all") {
-        const filter = filters.find((f) => f.id === filterId);
+        const filter = filters.find((f) => f.id === filterId)
         if (filter) {
           filtered = filtered.filter((item) => {
-            const itemValue = item[filterId as keyof T];
-            return itemValue === filterValue;
-          });
+            const itemValue = item[filterId as keyof T]
+            return itemValue === filterValue
+          })
         }
       }
-    });
+    })
 
-    return filtered;
-  }, [data, filterState, filters]);
+    return filtered
+  }, [data, filterState, filters])
 
   const table = useReactTable({
     data: filteredData,
@@ -339,40 +299,38 @@ export function DataTable<T extends Record<string, any>>({
     },
     manualPagination: true,
     columnResizeMode: "onChange",
-  });
+  })
 
   // const handleAddClick = () => {
   //   router.push("/dashboard/super-admin/schools/new")
   // }
 
   const handleFilterChange = (filterId: string, value: string) => {
-    setFilterState(filterId, value);
-  };
+    setFilterState(filterId, value)
+  }
 
   const handleClearFilters = () => {
     if (externalOnFilterChange) {
-      filters.forEach((filter) => externalOnFilterChange(filter.id, "all"));
+      filters.forEach((filter) => externalOnFilterChange(filter.id, "all"))
     } else {
-      setInternalFilterState({});
+      setInternalFilterState({})
     }
-  };
+  }
 
   const handleBulkAction = (action: string) => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const selectedRows = table.getFilteredSelectedRowModel().rows
     console.log(
       `Bulk action: ${action}`,
-      selectedRows.map((row) => row.original)
-    );
-  };
+      selectedRows.map((row) => row.original),
+    )
+  }
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <AlertCircle className="h-12 w-12 text-red-500" />
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Something went wrong
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900">Something went wrong</h3>
           <p className="text-gray-600 mt-1">{error}</p>
         </div>
         {onRefresh && (
@@ -386,7 +344,7 @@ export function DataTable<T extends Record<string, any>>({
           </Button>
         )}
       </div>
-    );
+    )
   }
 
   return (
@@ -424,18 +382,10 @@ export function DataTable<T extends Record<string, any>>({
         {columns.length > maxVisibleColumns && (
           <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
             <div className="text-sm text-gray-600">
-              Showing{" "}
-              {showAllColumns
-                ? columns.length
-                : Math.min(maxVisibleColumns, columns.length)}{" "}
-              of {columns.length} columns
+              Showing {showAllColumns ? columns.length : Math.min(maxVisibleColumns, columns.length)} of{" "}
+              {columns.length} columns
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAllColumns(!showAllColumns)}
-              className="text-xs"
-            >
+            <Button variant="outline" size="sm" onClick={() => setShowAllColumns(!showAllColumns)} className="text-xs">
               {showAllColumns ? "Show Less" : "Show All Columns"}
             </Button>
           </div>
@@ -467,10 +417,7 @@ export function DataTable<T extends Record<string, any>>({
                           <div className="truncate">
                             {header.isPlaceholder
                               ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
+                              : flexRender(header.column.columnDef.header, header.getContext())}
                           </div>
                         </TableHead>
                       ))}
@@ -485,9 +432,8 @@ export function DataTable<T extends Record<string, any>>({
                         data-state={row.getIsSelected() && "selected"}
                         className={cn(
                           "hover:bg-purple-50/50 border-b border-gray-100 transition-colors group",
-                          row.getIsSelected() &&
-                            "bg-purple-50/30 border-purple-200",
-                          index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+                          row.getIsSelected() && "bg-purple-50/30 border-purple-200",
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50/30",
                         )}
                       >
                         {row.getVisibleCells().map((cell) => (
@@ -500,32 +446,20 @@ export function DataTable<T extends Record<string, any>>({
                               maxWidth: cell.column.columnDef.maxSize,
                             }}
                           >
-                            <div className="truncate">
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </div>
+                            <div className="truncate">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
                           </TableCell>
                         ))}
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell
-                        colSpan={tableColumns.length}
-                        className="h-32 text-center text-gray-500"
-                      >
+                      <TableCell colSpan={tableColumns.length} className="h-32 text-center text-gray-500">
                         <div className="flex flex-col items-center justify-center py-8">
                           <div className="text-gray-400 mb-3">
                             <Grid3X3 className="h-12 w-12" />
                           </div>
-                          <p className="text-gray-600 font-medium text-lg">
-                            No results found
-                          </p>
-                          <p className="text-gray-400 text-sm mt-1">
-                            Try adjusting your search or filter criteria
-                          </p>
+                          <p className="text-gray-600 font-medium text-lg">No results found</p>
+                          <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filter criteria</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -535,11 +469,7 @@ export function DataTable<T extends Record<string, any>>({
             </div>
           </div>
         ) : (
-          <GridView
-            data={filteredData}
-            columns={columns}
-            actions={showActions ? actions : []}
-          />
+          <GridView data={filteredData} columns={columns} actions={showActions ? actions : []} />
         )}
 
         {/* Enhanced Pagination */}
@@ -547,17 +477,13 @@ export function DataTable<T extends Record<string, any>>({
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={onPageChange}
-          selectedCount={
-            enableSelection
-              ? table.getFilteredSelectedRowModel().rows.length
-              : 0
-          }
+          selectedCount={enableSelection ? table.getFilteredSelectedRowModel().rows.length : 0}
           totalCount={data.length}
           filteredCount={filteredData.length}
         />
       </div>
     </div>
-  );
+  )
 }
 
 // Enhanced Skeleton component
@@ -578,10 +504,7 @@ function DataTableSkeleton() {
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className={cn(
-              "flex items-center gap-4 p-6 transition-colors",
-              i % 2 === 0 ? "bg-white" : "bg-gray-50/30"
-            )}
+            className={cn("flex items-center gap-4 p-6 transition-colors", i % 2 === 0 ? "bg-white" : "bg-gray-50/30")}
           >
             <Skeleton className="h-4 w-4 rounded-sm" />
             <div className="flex-1 space-y-2">
@@ -599,7 +522,7 @@ function DataTableSkeleton() {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 // Enhanced Grid View component
@@ -608,9 +531,9 @@ function GridView<T extends Record<string, any>>({
   columns,
   actions,
 }: {
-  data: T[];
-  columns: any[];
-  actions: any[];
+  data: T[]
+  columns: any[]
+  actions: any[]
 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -624,14 +547,10 @@ function GridView<T extends Record<string, any>>({
               {/* Primary Info */}
               <div>
                 <h3 className="font-semibold text-gray-900 text-base leading-tight">
-                  {getStringValue(item, "applicantName") ||
-                    getStringValue(item, "name") ||
-                    "Unknown"}
+                  {getStringValue(item, "applicantName") || getStringValue(item, "name") || "Unknown"}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  {getStringValue(item, "schoolName") ||
-                    getStringValue(item, "code") ||
-                    "N/A"}
+                  {getStringValue(item, "schoolName") || getStringValue(item, "code") || "N/A"}
                 </p>
               </div>
 
@@ -639,43 +558,29 @@ function GridView<T extends Record<string, any>>({
               <div className="grid grid-cols-2 gap-4">
                 {getStringValue(item, "country") && (
                   <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                      Country
-                    </p>
-                    <p className="font-semibold text-gray-900 text-sm mt-1">
-                      {getStringValue(item, "country")}
-                    </p>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Country</p>
+                    <p className="font-semibold text-gray-900 text-sm mt-1">{getStringValue(item, "country")}</p>
                   </div>
                 )}
                 {getStringValue(item, "role") && (
                   <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                      Role
-                    </p>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Role</p>
                     <p className="font-semibold text-gray-900 text-xs line-clamp-1 mt-1 capitalize">
                       {getStringValue(item, "role").replace(/_/g, " ")}
                     </p>
                   </div>
                 )}
-                {(getNumberValue(item, "numberOfStudents") > 0 ||
-                  getNumberValue(item, "students") > 0) && (
+                {(getNumberValue(item, "numberOfStudents") > 0 || getNumberValue(item, "students") > 0) && (
                   <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                      Students
-                    </p>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Students</p>
                     <p className="font-semibold text-gray-900 text-sm mt-1">
-                      {(
-                        getNumberValue(item, "numberOfStudents") ||
-                        getNumberValue(item, "students")
-                      ).toLocaleString()}
+                      {(getNumberValue(item, "numberOfStudents") || getNumberValue(item, "students")).toLocaleString()}
                     </p>
                   </div>
                 )}
                 {getNumberValue(item, "teachers") > 0 && (
                   <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                      Teachers
-                    </p>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Teachers</p>
                     <p className="font-semibold text-gray-900 text-sm mt-1">
                       {getNumberValue(item, "teachers").toLocaleString()}
                     </p>
@@ -688,9 +593,7 @@ function GridView<T extends Record<string, any>>({
                 <div>
                   <StatusBadge
                     status={getStringValue(item, "status")}
-                    variant={
-                      getStringValue(item, "status").toLowerCase() as any
-                    }
+                    variant={getStringValue(item, "status").toLowerCase() as any}
                   />
                 </div>
               )}
@@ -708,7 +611,7 @@ function GridView<T extends Record<string, any>>({
                         "flex-1 h-9 text-xs transition-colors font-medium",
                         action.variant === "destructive"
                           ? "border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                          : "border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
+                          : "border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300",
                       )}
                     >
                       {action.icon}
@@ -722,7 +625,7 @@ function GridView<T extends Record<string, any>>({
         </Card>
       ))}
     </div>
-  );
+  )
 }
 
 // Enhanced Pagination component
@@ -734,21 +637,20 @@ export function EnhancedDataTablePagination({
   totalCount,
   filteredCount,
 }: {
-  currentPage: number;
-  totalPages: number;
-  onPageChange?: (page: number) => void;
-  selectedCount: number;
-  totalCount: number;
-  filteredCount?: number;
+  currentPage: number
+  totalPages: number
+  onPageChange?: (page: number) => void
+  selectedCount: number
+  totalCount: number
+  filteredCount?: number
 }) {
-  const displayCount = filteredCount !== undefined ? filteredCount : totalCount;
+  const displayCount = filteredCount !== undefined ? filteredCount : totalCount
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-4 bg-white rounded-lg border border-gray-200">
       <div className="text-sm text-gray-600">
         <span className="font-medium text-gray-800">{selectedCount}</span> of{" "}
-        <span className="font-medium text-gray-800">{displayCount}</span> row(s)
-        selected
+        <span className="font-medium text-gray-800">{displayCount}</span> row(s) selected
         {filteredCount !== undefined && filteredCount !== totalCount && (
           <span className="text-gray-500 ml-2">({totalCount} total)</span>
         )}
@@ -766,8 +668,8 @@ export function EnhancedDataTablePagination({
         </Button>
         <div className="flex items-center space-x-1">
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const pageNumber = i + 1;
-            const isCurrentPage = currentPage === pageNumber;
+            const pageNumber = i + 1
+            const isCurrentPage = currentPage === pageNumber
             return (
               <Button
                 key={i}
@@ -778,12 +680,12 @@ export function EnhancedDataTablePagination({
                   "w-9 h-9 p-0 text-sm transition-colors",
                   isCurrentPage
                     ? "bg-primary hover:bg-purple-700 text-white shadow-sm"
-                    : "border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
+                    : "border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400",
                 )}
               >
                 {pageNumber}
               </Button>
-            );
+            )
           })}
         </div>
         <Button
@@ -798,16 +700,16 @@ export function EnhancedDataTablePagination({
         </Button>
       </div>
     </div>
-  );
+  )
 }
 
 // Utility functions
 function getStringValue(obj: any, key: string, fallback = ""): string {
-  const value = obj?.[key];
-  return typeof value === "string" ? value : fallback;
+  const value = obj?.[key]
+  return typeof value === "string" ? value : fallback
 }
 
 function getNumberValue(obj: any, key: string, fallback = 0): number {
-  const value = obj?.[key];
-  return typeof value === "number" ? value : fallback;
+  const value = obj?.[key]
+  return typeof value === "number" ? value : fallback
 }

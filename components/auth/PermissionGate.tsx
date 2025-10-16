@@ -5,6 +5,9 @@ import {
   useHasPermission,
   useHasAnyPermission,
   useHasAllPermissions,
+  // useHasRole,
+  // useHasAnyRole,
+  // useIsAdmin,
 } from "@/hooks/usePermissions";
 
 interface PermissionGateProps {
