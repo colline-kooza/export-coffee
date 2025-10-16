@@ -9,7 +9,6 @@ import UserDashboard from "./components/UserDashboard";
 
 export default async function DashboardPage() {
   const user = await getAuthUser();
-
   if (!user) {
     redirect(`/login?redirect=${encodeURIComponent("/dashboard")}`);
   }
