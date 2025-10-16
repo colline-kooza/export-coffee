@@ -18,7 +18,7 @@ import {
   dummyExportOrders,
   dummyFinancialMetrics,
   dummyWeeklyMetrics,
-} from "../dammy/dammy-data";
+} from "@/lib/dummy-data";
 
 export default function AdminDashboardPage() {
   const recentActivities = [
